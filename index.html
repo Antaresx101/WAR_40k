@@ -11,7 +11,7 @@
     
     <title>Warhammer 40k Ability Reference</title>
     
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
     <link rel="apple-touch-icon" href="icon-192.png">
@@ -143,6 +143,12 @@
             transform: translateY(0);
         }
         
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        
         .btn-primary {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
@@ -256,6 +262,10 @@
             cursor: pointer;
             transition: all 0.3s ease;
             box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .saved-lists h3 {
+            color: var(--text-dark);
         }
         
         body.dark-mode .list-card {
@@ -919,13 +929,13 @@
                 <button class="close-modal" onclick="closeModal('menu-modal')">✕</button>
             </div>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button class="btn btn-primary" onclick="showAddAbilityModal()">
+                <button class="btn btn-primary" id="menu-add-ability" onclick="showAddAbilityModal()">
                     ➕ Add Custom Ability
                 </button>
-                <button class="btn btn-primary" onclick="exportToJSON()">
+                <button class="btn btn-primary" id="menu-export" onclick="exportToJSON()">
                     📤 Export to JSON
                 </button>
-                <button class="btn btn-primary" onclick="saveCurrentList()">
+                <button class="btn btn-primary" id="menu-save" onclick="saveCurrentList()">
                     💾 Save List
                 </button>
                 <button class="btn btn-secondary" onclick="showUploadScreen()">
@@ -934,7 +944,7 @@
                 <button class="btn btn-secondary" onclick="showSavedLists()">
                     📋 View Saved Lists
                 </button>
-                <button class="btn btn-danger" onclick="deleteCurrentList()" style="background: var(--danger);">
+                <button class="btn" id="menu-delete" onclick="deleteCurrentList()" style="background: var(--danger); color: white;">
                     🗑️ Delete Current List
                 </button>
             </div>
@@ -967,7 +977,7 @@
         // ==================== SERVICE WORKER ====================
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('sw.js')
+                navigator.serviceWorker.register('./sw.js')
                     .then(reg => console.log('Service Worker registered'))
                     .catch(err => console.log('Service Worker registration failed'));
             }
@@ -1002,6 +1012,7 @@
             
             // Menu button
             document.getElementById('menu-btn').addEventListener('click', () => {
+                updateMenuButtonStates();
                 openModal('menu-modal');
             });
 
@@ -1408,9 +1419,15 @@
             });
 
             // Notes
+            let notesTimeout;
             document.getElementById('notes-area').addEventListener('input', (e) => {
                 AppState.currentList.notes = e.target.value;
-                saveCurrentList();
+                
+                // Debounce auto-save
+                clearTimeout(notesTimeout);
+                notesTimeout = setTimeout(() => {
+                    saveCurrentList();
+                }, 1000); // Save 1 second after user stops typing
             });
 
             // Drag and drop
@@ -1604,7 +1621,10 @@
 
         // ==================== STORAGE ====================
         function saveCurrentList() {
-            if (!AppState.currentList) return;
+            if (!AppState.currentList) {
+                alert('No list to save');
+                return;
+            }
 
             const savedLists = getSavedLists();
             savedLists[AppState.currentListId] = {
@@ -1612,6 +1632,16 @@
                 lastModified: new Date().toISOString()
             };
             localStorage.setItem('savedLists', JSON.stringify(savedLists));
+            
+            // Show brief confirmation
+            const btn = document.getElementById('menu-save');
+            if (btn) {
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Saved!';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                }, 1500);
+            }
         }
 
         function getSavedLists() {
@@ -1624,12 +1654,16 @@
             const container = document.getElementById('saved-lists-container');
 
             if (Object.keys(savedLists).length === 0) {
-                container.innerHTML = '';
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 20px; color: var(--text-light-secondary);">
+                        <p>No saved lists yet. Upload an army list to get started!</p>
+                    </div>
+                `;
                 return;
             }
 
             container.innerHTML = `
-                <h3>📋 Saved Lists</h3>
+                <h3 style="color: var(--text-light);">📋 Saved Lists</h3>
                 ${Object.entries(savedLists).map(([id, list]) => `
                     <div class="list-card" onclick="loadList('${id}')">
                         <div class="list-info">
@@ -1666,10 +1700,19 @@
             const savedLists = getSavedLists();
             delete savedLists[listId];
             localStorage.setItem('savedLists', JSON.stringify(savedLists));
-            loadSavedLists();
+            
+            // If we're on the welcome screen, refresh the list
+            if (document.getElementById('welcome-screen').style.display !== 'none') {
+                loadSavedLists();
+            }
         }
 
         function deleteCurrentList() {
+            if (!AppState.currentListId) {
+                alert('No list is currently active');
+                return;
+            }
+            
             if (!confirm('Delete current list? This cannot be undone.')) return;
 
             deleteSavedList(AppState.currentListId);
@@ -1678,6 +1721,11 @@
 
         // ==================== EXPORT ====================
         function exportToJSON() {
+            if (!AppState.currentList) {
+                alert('No list to export');
+                return;
+            }
+            
             const data = JSON.stringify(AppState.currentList, null, 2);
             const blob = new Blob([data], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
@@ -1691,11 +1739,31 @@
         }
 
         // ==================== NAVIGATION ====================
+        function updateMenuButtonStates() {
+            const hasActiveList = AppState.currentList !== null;
+            
+            // Disable/enable buttons based on active list
+            const menuButtons = {
+                'menu-add-ability': hasActiveList,
+                'menu-export': hasActiveList,
+                'menu-save': hasActiveList,
+                'menu-delete': hasActiveList
+            };
+            
+            Object.entries(menuButtons).forEach(([id, enabled]) => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.disabled = !enabled;
+                }
+            });
+        }
+        
         function showUploadScreen() {
             document.getElementById('welcome-screen').style.display = 'block';
             document.getElementById('army-view').style.display = 'none';
             AppState.currentList = null;
             AppState.currentListId = null;
+            loadSavedLists(); // Refresh the saved lists display
             closeModal('menu-modal');
         }
 
@@ -1705,6 +1773,10 @@
         }
 
         function showAddAbilityModal() {
+            if (!AppState.currentList) {
+                alert('Please load an army list first');
+                return;
+            }
             closeModal('menu-modal');
             openModal('add-ability-modal');
         }
