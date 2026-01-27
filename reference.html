@@ -1,0 +1,1740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Warhammer 40k Ability Reference - Organize and manage your army abilities">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="WH40k Reference">
+    
+    <title>Warhammer 40k Ability Reference</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    
+    <style>
+        /* ==================== BASE STYLES ==================== */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #667eea;
+            --primary-dark: #5568d3;
+            --secondary: #764ba2;
+            --accent: #f093fb;
+            --success: #48bb78;
+            --warning: #ed8936;
+            --danger: #f56565;
+            --info: #4299e1;
+            
+            --bg-light: #ffffff;
+            --bg-light-alt: #f7fafc;
+            --text-light: #2d3748;
+            --text-light-secondary: #4a5568;
+            --border-light: #e2e8f0;
+            
+            --bg-dark: #1a202c;
+            --bg-dark-alt: #2d3748;
+            --text-dark: #e2e8f0;
+            --text-dark-secondary: #cbd5e0;
+            --border-dark: #4a5568;
+            
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            min-height: 100vh;
+            color: var(--text-light);
+            transition: background 0.3s ease;
+            overflow-x: hidden;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-dark-alt) 100%);
+            color: var(--text-dark);
+        }
+        
+        /* ==================== LAYOUT ==================== */
+        .app-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: white;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            padding: 15px 20px;
+        }
+        
+        body.dark-mode .header {
+            background: var(--bg-dark-alt);
+        }
+        
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .app-title {
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .content {
+            flex: 1;
+            padding: 20px;
+            background: var(--bg-light);
+        }
+        
+        body.dark-mode .content {
+            background: var(--bg-dark);
+        }
+        
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-light-alt);
+            color: var(--text-light);
+        }
+        
+        body.dark-mode .btn-secondary {
+            background: var(--bg-dark-alt);
+            color: var(--text-dark);
+        }
+        
+        .btn-icon {
+            padding: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+        
+        /* ==================== WELCOME SCREEN ==================== */
+        .welcome-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .welcome-screen h2 {
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            margin-bottom: 20px;
+            color: var(--text-light);
+        }
+        
+        body.dark-mode .welcome-screen h2 {
+            color: var(--text-dark);
+        }
+        
+        .welcome-screen p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            color: var(--text-light-secondary);
+        }
+        
+        body.dark-mode .welcome-screen p {
+            color: var(--text-dark-secondary);
+        }
+        
+        .upload-area {
+            background: white;
+            border: 3px dashed var(--border-light);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 20px auto;
+            max-width: 500px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        body.dark-mode .upload-area {
+            background: var(--bg-dark-alt);
+            border-color: var(--border-dark);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: var(--bg-light-alt);
+        }
+        
+        body.dark-mode .upload-area:hover {
+            background: var(--bg-dark);
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .saved-lists {
+            margin-top: 40px;
+        }
+        
+        .saved-lists h3 {
+            margin-bottom: 15px;
+            color: var(--text-light);
+        }
+        
+        body.dark-mode .saved-lists h3 {
+            color: var(--text-dark);
+        }
+        
+        .list-card {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .list-card {
+            background: var(--bg-dark-alt);
+        }
+        
+        .list-card:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .list-info h4 {
+            margin-bottom: 5px;
+            color: var(--primary);
+        }
+        
+        .list-info p {
+            font-size: 0.9rem;
+            color: var(--text-light-secondary);
+        }
+        
+        body.dark-mode .list-info p {
+            color: var(--text-dark-secondary);
+        }
+        
+        .list-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* ==================== ARMY VIEW ==================== */
+        .army-header {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .army-header {
+            background: var(--bg-dark-alt);
+        }
+        
+        .army-header h2 {
+            margin-bottom: 10px;
+            color: var(--primary);
+        }
+        
+        body.dark-mode .army-header h2 {
+            color: var(--accent);
+        }
+        
+        .army-meta {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            color: var(--text-light-secondary);
+        }
+        
+        body.dark-mode .army-meta {
+            color: var(--text-dark-secondary);
+        }
+        
+        .stats-panel {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 5px;
+        }
+        
+        /* ==================== SEARCH & FILTER ==================== */
+        .controls-bar {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .controls-bar {
+            background: var(--bg-dark-alt);
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        body.dark-mode .search-box {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+            border-color: var(--border-dark);
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border-light);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        body.dark-mode .filter-btn {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+        
+        body.dark-mode .filter-btn.active {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        /* ==================== PHASE SECTIONS ==================== */
+        .phase-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 5px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .phase-section {
+            background: var(--bg-dark-alt);
+        }
+        
+        .phase-section h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        body.dark-mode .phase-section h3 {
+            color: var(--accent);
+        }
+        
+        /* ==================== ABILITIES ==================== */
+        .ability {
+            position: relative;
+            background: var(--bg-light-alt);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid var(--info);
+            transition: all 0.2s ease;
+            cursor: grab;
+        }
+        
+        .ability:active {
+            cursor: grabbing;
+        }
+        
+        .ability:hover {
+            transform: translateX(5px);
+            box-shadow: var(--shadow);
+        }
+        
+        .ability.dragging {
+            opacity: 0.5;
+        }
+        
+        .ability.enemy {
+            border-left-color: var(--danger);
+            background: linear-gradient(90deg, #fff5f5 0%, var(--bg-light-alt) 100%);
+        }
+        
+        .ability.stratagem {
+            border-left-color: var(--warning);
+        }
+        
+        .ability.detachment {
+            border-left-color: var(--secondary);
+        }
+        
+        body.dark-mode .ability {
+            background: var(--bg-dark);
+        }
+        
+        body.dark-mode .ability.enemy {
+            background: linear-gradient(90deg, #2d1b1b 0%, var(--bg-dark) 100%);
+        }
+        
+        .ability-controls {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            display: flex;
+            gap: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .ability:hover .ability-controls {
+            opacity: 1;
+        }
+        
+        .ability-controls button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            background: white;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .ability-controls button {
+            background: var(--bg-dark-alt);
+        }
+        
+        .ability-controls button:hover {
+            transform: scale(1.1);
+        }
+        
+        .ability-controls .color-btn:hover { background: var(--success); }
+        .ability-controls .duplicate-btn:hover { background: var(--info); }
+        .ability-controls .edit-btn:hover { background: var(--warning); }
+        .ability-controls .delete-btn:hover { background: var(--danger); color: white; }
+        
+        .unit-name {
+            font-weight: 700;
+            color: var(--text-light);
+            font-size: 1.1rem;
+            margin-bottom: 5px;
+            padding-right: 120px;
+        }
+        
+        body.dark-mode .unit-name {
+            color: var(--text-dark);
+        }
+        
+        .ability-name {
+            font-style: italic;
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        body.dark-mode .ability-name {
+            color: var(--accent);
+        }
+        
+        .ability-desc {
+            color: var(--text-light-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            white-space: pre-line;
+        }
+        
+        body.dark-mode .ability-desc {
+            color: var(--text-dark-secondary);
+        }
+        
+        .ability-desc strong {
+            color: var(--text-light);
+            font-weight: 700;
+        }
+        
+        body.dark-mode .ability-desc strong {
+            color: var(--text-dark);
+        }
+        
+        /* ==================== MODAL ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        body.dark-mode .modal-content {
+            background: var(--bg-dark-alt);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: var(--primary);
+        }
+        
+        body.dark-mode .modal-header h3 {
+            color: var(--accent);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-light-secondary);
+        }
+        
+        body.dark-mode .close-modal {
+            color: var(--text-dark-secondary);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        
+        body.dark-mode .form-group label {
+            color: var(--text-dark);
+        }
+        
+        .form-group select,
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        body.dark-mode .form-group select,
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group textarea {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+            border-color: var(--border-dark);
+        }
+        
+        /* ==================== NOTES ==================== */
+        .notes-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+        
+        body.dark-mode .notes-panel {
+            background: var(--bg-dark-alt);
+        }
+        
+        .notes-panel h3 {
+            margin-bottom: 15px;
+            color: var(--primary);
+        }
+        
+        body.dark-mode .notes-panel h3 {
+            color: var(--accent);
+        }
+        
+        .notes-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px;
+            border: 2px solid var(--border-light);
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+        }
+        
+        body.dark-mode .notes-textarea {
+            background: var(--bg-dark);
+            color: var(--text-dark);
+            border-color: var(--border-dark);
+        }
+        
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-wrap: wrap;
+            }
+            
+            .app-title {
+                flex: 1 0 100%;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+            
+            .stats-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+            
+            .btn-icon {
+                width: 36px;
+                height: 36px;
+            }
+        }
+        
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .ability {
+            animation: slideIn 0.3s ease;
+        }
+        
+        /* ==================== LOADING ==================== */
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid var(--border-light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* ==================== INSTALL PROMPT ==================== */
+        .install-prompt {
+            background: linear-gradient(135deg, var(--success) 0%, #38a169 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+        }
+        
+        .install-prompt.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="app-title">⚔️ WH40k Reference</h1>
+                <div class="header-actions">
+                    <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
+                        🌙
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="menu-btn" title="Menu">
+                        ☰
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Install Prompt -->
+        <div class="install-prompt hidden" id="install-prompt">
+            <div>
+                <strong>📱 Install App</strong>
+                <p style="font-size: 0.9rem; margin-top: 5px;">Add to home screen for quick access!</p>
+            </div>
+            <div>
+                <button class="btn btn-sm" style="background: white; color: var(--success);" id="install-btn">Install</button>
+                <button class="btn btn-sm btn-secondary" id="dismiss-install">Later</button>
+            </div>
+        </div>
+
+        <!-- Content -->
+        <main class="content" id="main-content">
+            <!-- Welcome Screen -->
+            <div id="welcome-screen" class="welcome-screen">
+                <h2>Welcome to Your Ability Reference</h2>
+                <p>Upload your army list to get started</p>
+                
+                <div class="upload-area" id="upload-area">
+                    <div class="upload-icon">📤</div>
+                    <h3>Drop JSON file here or click to browse</h3>
+                    <p style="margin-top: 10px; color: var(--text-light-secondary);">
+                        Export from New Recruit: Export → JSON
+                    </p>
+                    <input type="file" id="file-input" class="file-input" accept=".json">
+                </div>
+                
+                <div class="saved-lists" id="saved-lists-container">
+                    <!-- Saved lists will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Army View (hidden by default) -->
+            <div id="army-view" style="display: none;">
+                <!-- Army header, stats, controls, and abilities will be inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Add Ability Modal -->
+    <div class="modal" id="add-ability-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Custom Ability</h3>
+                <button class="close-modal" onclick="closeModal('add-ability-modal')">✕</button>
+            </div>
+            <form id="add-ability-form">
+                <div class="form-group">
+                    <label>Phase</label>
+                    <select id="ability-phase">
+                        <option value="DEPLOYMENT / RESERVES">Deployment / Reserves</option>
+                        <option value="COMMAND PHASE">Command Phase</option>
+                        <option value="MOVEMENT PHASE">Movement Phase</option>
+                        <option value="SHOOTING PHASE">Shooting Phase</option>
+                        <option value="CHARGE PHASE">Charge Phase</option>
+                        <option value="FIGHT PHASE">Fight Phase</option>
+                        <option value="ANY PHASE">Any Phase</option>
+                        <option value="OTHER">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unit Name</label>
+                    <input type="text" id="ability-unit" required>
+                </div>
+                <div class="form-group">
+                    <label>Ability Name</label>
+                    <input type="text" id="ability-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="ability-desc" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    ➕ Add Ability
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Ability Modal -->
+    <div class="modal" id="edit-ability-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Ability</h3>
+                <button class="close-modal" onclick="closeModal('edit-ability-modal')">✕</button>
+            </div>
+            <form id="edit-ability-form">
+                <input type="hidden" id="edit-ability-id">
+                <div class="form-group">
+                    <label>Unit Name</label>
+                    <input type="text" id="edit-ability-unit" required>
+                </div>
+                <div class="form-group">
+                    <label>Ability Name</label>
+                    <input type="text" id="edit-ability-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="edit-ability-desc" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    💾 Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Menu Modal -->
+    <div class="modal" id="menu-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Menu</h3>
+                <button class="close-modal" onclick="closeModal('menu-modal')">✕</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-primary" onclick="showAddAbilityModal()">
+                    ➕ Add Custom Ability
+                </button>
+                <button class="btn btn-primary" onclick="exportToJSON()">
+                    📤 Export to JSON
+                </button>
+                <button class="btn btn-primary" onclick="saveCurrentList()">
+                    💾 Save List
+                </button>
+                <button class="btn btn-secondary" onclick="showUploadScreen()">
+                    📂 Load Different List
+                </button>
+                <button class="btn btn-secondary" onclick="showSavedLists()">
+                    📋 View Saved Lists
+                </button>
+                <button class="btn btn-danger" onclick="deleteCurrentList()" style="background: var(--danger);">
+                    🗑️ Delete Current List
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== APP STATE ====================
+        const AppState = {
+            currentList: null,
+            currentListId: null,
+            isDarkMode: false,
+            deferredPrompt: null,
+            draggedElement: null
+        };
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadDarkMode();
+            setupEventListeners();
+            loadSavedLists();
+            registerServiceWorker();
+            setupInstallPrompt();
+        }
+
+        // ==================== SERVICE WORKER ====================
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            }
+        }
+
+        // ==================== INSTALL PROMPT ====================
+        function setupInstallPrompt() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                AppState.deferredPrompt = e;
+                document.getElementById('install-prompt').classList.remove('hidden');
+            });
+
+            document.getElementById('install-btn').addEventListener('click', async () => {
+                if (AppState.deferredPrompt) {
+                    AppState.deferredPrompt.prompt();
+                    const { outcome } = await AppState.deferredPrompt.userChoice;
+                    AppState.deferredPrompt = null;
+                    document.getElementById('install-prompt').classList.add('hidden');
+                }
+            });
+
+            document.getElementById('dismiss-install').addEventListener('click', () => {
+                document.getElementById('install-prompt').classList.add('hidden');
+            });
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        function setupEventListeners() {
+            // Dark mode toggle
+            document.getElementById('dark-mode-btn').addEventListener('click', toggleDarkMode);
+            
+            // Menu button
+            document.getElementById('menu-btn').addEventListener('click', () => {
+                openModal('menu-modal');
+            });
+
+            // File upload
+            const uploadArea = document.getElementById('upload-area');
+            const fileInput = document.getElementById('file-input');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+            
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'var(--primary)';
+            });
+            
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '';
+            });
+            
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                const file = e.dataTransfer.files[0];
+                if (file && file.type === 'application/json') {
+                    handleFileUpload(file);
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFileUpload(file);
+                }
+            });
+
+            // Add ability form
+            document.getElementById('add-ability-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                addCustomAbility();
+            });
+
+            // Edit ability form
+            document.getElementById('edit-ability-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                saveEditedAbility();
+            });
+        }
+
+        // ==================== DARK MODE ====================
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            AppState.isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', AppState.isDarkMode);
+            
+            const btn = document.getElementById('dark-mode-btn');
+            btn.textContent = AppState.isDarkMode ? '☀️' : '🌙';
+        }
+
+        function loadDarkMode() {
+            const savedMode = localStorage.getItem('darkMode');
+            if (savedMode === 'true') {
+                document.body.classList.add('dark-mode');
+                AppState.isDarkMode = true;
+                document.getElementById('dark-mode-btn').textContent = '☀️';
+            }
+        }
+
+        // ==================== FILE HANDLING ====================
+        async function handleFileUpload(file) {
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                const parsedList = parseNewRecruitJSON(data);
+                
+                if (parsedList) {
+                    AppState.currentList = parsedList;
+                    AppState.currentListId = Date.now().toString();
+                    renderArmyView();
+                }
+            } catch (error) {
+                alert('Error parsing file: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // ==================== JSON PARSER ====================
+        function parseNewRecruitJSON(data) {
+            const roster = data.roster || {};
+            const forces = roster.forces || [];
+            
+            const list = {
+                id: Date.now().toString(),
+                name: roster.name || 'Unknown Army',
+                points: roster.costs?.[0]?.value || 0,
+                faction: '',
+                detachment: '',
+                abilities: [],
+                notes: ''
+            };
+
+            for (const force of forces) {
+                list.faction = force.catalogueName || '';
+                list.faction = list.faction.replace('Imperium - ', '').replace('Chaos - ', '');
+                
+                walkSelections(force.selections || [], list);
+            }
+
+            // Categorize abilities
+            list.categorized = categorizeAbilities(list.abilities);
+            
+            return list;
+        }
+
+        function walkSelections(selections, list, currentUnit = '') {
+            for (const item of selections) {
+                const name = item.name || '';
+                const group = item.group || '';
+
+                // Detect detachment
+                if (name.toLowerCase().includes('detachment') || group.toLowerCase().includes('detachment')) {
+                    for (const sub of item.selections || []) {
+                        const detName = sub.name || '';
+                        if (detName && detName.toLowerCase() !== 'detachment') {
+                            list.detachment = detName;
+                            break;
+                        }
+                    }
+
+                    // Extract detachment abilities
+                    for (const profile of item.profiles || []) {
+                        if (profile.typeName === 'Abilities') {
+                            const abilityName = profile.name || '';
+                            let description = '';
+                            for (const char of profile.characteristics || []) {
+                                if (char.name === 'Description') {
+                                    description = char.$text || '';
+                                    break;
+                                }
+                            }
+                            if (abilityName && description) {
+                                list.abilities.push({
+                                    id: generateId(),
+                                    unitName: 'DETACHMENT',
+                                    abilityName: abilityName,
+                                    description: description,
+                                    isDetachment: true,
+                                    isStratagem: false,
+                                    isEnemy: false,
+                                    source: 'detachment'
+                                });
+                            }
+                        }
+                    }
+
+                    // Extract detachment rules
+                    for (const rule of item.rules || []) {
+                        const abilityName = rule.name || '';
+                        const description = rule.description || '';
+                        if (abilityName && description) {
+                            list.abilities.push({
+                                id: generateId(),
+                                unitName: 'DETACHMENT',
+                                abilityName: abilityName,
+                                description: description,
+                                isDetachment: true,
+                                isStratagem: false,
+                                isEnemy: false,
+                                source: 'detachment'
+                            });
+                        }
+                    }
+                }
+                // Extract unit abilities
+                else if (item.profiles) {
+                    for (const profile of item.profiles) {
+                        if (profile.typeName === 'Abilities') {
+                            const abilityName = profile.name || '';
+                            let description = '';
+                            for (const char of profile.characteristics || []) {
+                                if (char.name === 'Description') {
+                                    description = char.$text || '';
+                                    break;
+                                }
+                            }
+                            if (abilityName && description) {
+                                list.abilities.push({
+                                    id: generateId(),
+                                    unitName: currentUnit || name,
+                                    abilityName: abilityName,
+                                    description: description,
+                                    isDetachment: false,
+                                    isStratagem: false,
+                                    isEnemy: checkIfEnemy(description),
+                                    source: 'unit'
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Recurse
+                if (item.selections) {
+                    walkSelections(item.selections, list, currentUnit || name);
+                }
+            }
+        }
+
+        function checkIfEnemy(description) {
+            const desc = description.toLowerCase().replace(/[´']/g, '');
+            const enemyKeywords = [
+                'each time an enemy unit',
+                'in your opponents',
+                'end of your opponents',
+                'start of your opponents',
+                'model is destroyed',
+                'after an enemy unit has'
+            ];
+            return enemyKeywords.some(kw => desc.includes(kw));
+        }
+
+        // ==================== CATEGORIZATION ====================
+        function categorizeAbilities(abilities) {
+            const phases = {
+                'DEPLOYMENT / RESERVES': [],
+                'COMMAND PHASE': [],
+                'MOVEMENT PHASE': [],
+                'SHOOTING PHASE': [],
+                'CHARGE PHASE': [],
+                'FIGHT PHASE': [],
+                'ANY PHASE': [],
+                'OTHER': []
+            };
+
+            const phaseKeywords = {
+                'FIGHT PHASE': {
+                    include: [' fight', ' fights', ' fight phase', ' weapon skill', ' melee attack', ' melee weapon'],
+                    exclude: ['fire overwatch']
+                },
+                'CHARGE PHASE': {
+                    include: [' charge phase', ' charge roll', ' charge move'],
+                    exclude: []
+                },
+                'SHOOTING PHASE': {
+                    include: [' shoot', ' shooting phase', ' ranged attack', ' ranged weapon', 'stealth'],
+                    exclude: ['fire overwatch']
+                },
+                'MOVEMENT PHASE': {
+                    include: [' moves', ' a move', 'normal move', ' fallback', ' fall back', ' advance ', ' movement phase', ' deep strike'],
+                    exclude: ['as if it were your movement phase']
+                },
+                'COMMAND PHASE': {
+                    include: [' start of your turn', ' command phase', ' order', ' battle-shock'],
+                    exclude: []
+                },
+                'ANY PHASE': {
+                    include: [' any phase', 'each time', ' attack', ' weapon', ' stratagem'],
+                    exclude: []
+                },
+                'DEPLOYMENT / RESERVES': {
+                    include: [' reserves', ' declare battle formations', ' scouts', ' infiltrators'],
+                    exclude: []
+                }
+            };
+
+            for (const ability of abilities) {
+                const desc = ability.description.toLowerCase().replace(/[´']/g, '');
+                let found = false;
+
+                for (const [phase, keywords] of Object.entries(phaseKeywords)) {
+                    if (found && phase === 'ANY PHASE') break;
+
+                    const hasInclude = keywords.include.some(kw => desc.includes(kw));
+                    const hasExclude = keywords.exclude.some(kw => desc.includes(kw));
+
+                    if (hasInclude && !hasExclude) {
+                        phases[phase].push(ability);
+                        found = true;
+                        break;
+                    }
+                }
+
+                if (!found) {
+                    phases['OTHER'].push(ability);
+                }
+            }
+
+            return phases;
+        }
+
+        // ==================== RENDERING ====================
+        function renderArmyView() {
+            const armyView = document.getElementById('army-view');
+            const welcomeScreen = document.getElementById('welcome-screen');
+
+            welcomeScreen.style.display = 'none';
+            armyView.style.display = 'block';
+
+            const list = AppState.currentList;
+            const totalAbilities = list.abilities.length;
+            const stratagems = list.abilities.filter(a => a.isStratagem).length;
+            const enemyTriggered = list.abilities.filter(a => a.isEnemy).length;
+
+            armyView.innerHTML = `
+                <div class="army-header">
+                    <h2>${list.name}</h2>
+                    <div class="army-meta">
+                        <span><strong>Faction:</strong> ${list.faction}</span>
+                        <span><strong>Detachment:</strong> ${list.detachment || 'None'}</span>
+                        <span><strong>Points:</strong> ${list.points}</span>
+                    </div>
+                </div>
+
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <div class="stat-value">${totalAbilities}</div>
+                        <div class="stat-label">Total Abilities</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${stratagems}</div>
+                        <div class="stat-label">Stratagems</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">${enemyTriggered}</div>
+                        <div class="stat-label">Enemy Triggered</div>
+                    </div>
+                </div>
+
+                <div class="controls-bar">
+                    <input type="text" class="search-box" id="search-box" placeholder="🔍 Search abilities...">
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="stratagem">Stratagems</button>
+                        <button class="filter-btn" data-filter="detachment">Detachment</button>
+                        <button class="filter-btn" data-filter="enemy">Enemy Triggered</button>
+                    </div>
+                </div>
+
+                <div class="notes-panel">
+                    <h3>📝 Battle Notes</h3>
+                    <textarea class="notes-textarea" id="notes-area" placeholder="Take notes about your battle plan...">${list.notes || ''}</textarea>
+                </div>
+
+                <div id="abilities-container">
+                    ${renderPhases(list.categorized)}
+                </div>
+            `;
+
+            setupArmyViewListeners();
+        }
+
+        function renderPhases(categorized) {
+            let html = '';
+            
+            for (const [phase, abilities] of Object.entries(categorized)) {
+                if (abilities.length === 0) continue;
+
+                html += `
+                    <div class="phase-section" data-phase="${phase}">
+                        <h3>${phase}</h3>
+                        ${abilities.map(ability => renderAbility(ability)).join('')}
+                    </div>
+                `;
+            }
+
+            return html;
+        }
+
+        function renderAbility(ability) {
+            const classes = ['ability'];
+            if (ability.isEnemy) classes.push('enemy');
+            if (ability.isStratagem) classes.push('stratagem');
+            if (ability.isDetachment) classes.push('detachment');
+
+            const description = formatDescription(ability.description);
+
+            return `
+                <div class="${classes.join(' ')}" data-ability-id="${ability.id}" draggable="true">
+                    <div class="ability-controls">
+                        <button class="color-btn" onclick="toggleEnemyColor('${ability.id}')" title="Toggle color">🎨</button>
+                        <button class="duplicate-btn" onclick="duplicateAbility('${ability.id}')" title="Duplicate">📑</button>
+                        <button class="edit-btn" onclick="editAbility('${ability.id}')" title="Edit">✏️</button>
+                        <button class="delete-btn" onclick="deleteAbility('${ability.id}')" title="Delete">✕</button>
+                    </div>
+                    <div class="unit-name">${ability.unitName}</div>
+                    <div class="ability-name">${ability.abilityName}</div>
+                    <div class="ability-desc">${description}</div>
+                </div>
+            `;
+        }
+
+        function formatDescription(text) {
+            // Bold keywords
+            text = text.replace(/\*\*\^\^(.*?)\^\^\*\*|\*\*(.*?)\*\*/g, (m, g1, g2) => `<strong>${g1 || g2}</strong>`);
+            text = text.replace(/\b([A-Z]{2,})\b/g, '<strong>$1</strong>');
+            return text;
+        }
+
+        function setupArmyViewListeners() {
+            // Search
+            document.getElementById('search-box').addEventListener('input', handleSearch);
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', handleFilter);
+            });
+
+            // Notes
+            document.getElementById('notes-area').addEventListener('input', (e) => {
+                AppState.currentList.notes = e.target.value;
+                saveCurrentList();
+            });
+
+            // Drag and drop
+            setupDragAndDrop();
+        }
+
+        // ==================== SEARCH & FILTER ====================
+        function handleSearch(e) {
+            const query = e.target.value.toLowerCase();
+            document.querySelectorAll('.ability').forEach(ability => {
+                const text = ability.textContent.toLowerCase();
+                ability.style.display = text.includes(query) ? 'block' : 'none';
+            });
+        }
+
+        function handleFilter(e) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            e.target.classList.add('active');
+
+            const filter = e.target.dataset.filter;
+            document.querySelectorAll('.ability').forEach(ability => {
+                if (filter === 'all') {
+                    ability.style.display = 'block';
+                } else {
+                    ability.style.display = ability.classList.contains(filter) ? 'block' : 'none';
+                }
+            });
+        }
+
+        // ==================== DRAG AND DROP ====================
+        function setupDragAndDrop() {
+            document.querySelectorAll('.ability').forEach(ability => {
+                ability.addEventListener('dragstart', handleDragStart);
+                ability.addEventListener('dragend', handleDragEnd);
+            });
+
+            document.querySelectorAll('.phase-section').forEach(section => {
+                section.addEventListener('dragover', handleDragOver);
+                section.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            AppState.draggedElement = e.target;
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            saveCurrentList();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
+            const section = e.currentTarget;
+
+            if (afterElement == null) {
+                section.appendChild(AppState.draggedElement);
+            } else {
+                section.insertBefore(AppState.draggedElement, afterElement);
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.ability:not(.dragging)')];
+
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        // ==================== ABILITY ACTIONS ====================
+        function toggleEnemyColor(abilityId) {
+            const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
+            element.classList.toggle('enemy');
+            
+            const ability = findAbilityById(abilityId);
+            if (ability) {
+                ability.isEnemy = element.classList.contains('enemy');
+                saveCurrentList();
+            }
+        }
+
+        function duplicateAbility(abilityId) {
+            const ability = findAbilityById(abilityId);
+            if (!ability) return;
+
+            const newAbility = { ...ability, id: generateId() };
+            AppState.currentList.abilities.push(newAbility);
+
+            const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
+            const parent = element.parentElement;
+            
+            element.insertAdjacentHTML('afterend', renderAbility(newAbility));
+            setupDragAndDrop();
+            saveCurrentList();
+        }
+
+        function editAbility(abilityId) {
+            const ability = findAbilityById(abilityId);
+            if (!ability) return;
+
+            document.getElementById('edit-ability-id').value = abilityId;
+            document.getElementById('edit-ability-unit').value = ability.unitName;
+            document.getElementById('edit-ability-name').value = ability.abilityName;
+            document.getElementById('edit-ability-desc').value = ability.description;
+
+            openModal('edit-ability-modal');
+        }
+
+        function saveEditedAbility() {
+            const abilityId = document.getElementById('edit-ability-id').value;
+            const ability = findAbilityById(abilityId);
+            
+            if (ability) {
+                ability.unitName = document.getElementById('edit-ability-unit').value;
+                ability.abilityName = document.getElementById('edit-ability-name').value;
+                ability.description = document.getElementById('edit-ability-desc').value;
+
+                renderArmyView();
+                saveCurrentList();
+            }
+
+            closeModal('edit-ability-modal');
+        }
+
+        function deleteAbility(abilityId) {
+            if (!confirm('Delete this ability?')) return;
+
+            const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
+            element.remove();
+
+            const index = AppState.currentList.abilities.findIndex(a => a.id === abilityId);
+            if (index !== -1) {
+                AppState.currentList.abilities.splice(index, 1);
+                saveCurrentList();
+            }
+        }
+
+        function addCustomAbility() {
+            const phase = document.getElementById('ability-phase').value;
+            const unit = document.getElementById('ability-unit').value.trim();
+            const name = document.getElementById('ability-name').value.trim();
+            const desc = document.getElementById('ability-desc').value.trim();
+
+            if (!unit || !name || !desc) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const ability = {
+                id: generateId(),
+                unitName: unit,
+                abilityName: name,
+                description: desc,
+                isDetachment: false,
+                isStratagem: false,
+                isEnemy: checkIfEnemy(desc),
+                source: 'custom'
+            };
+
+            AppState.currentList.abilities.push(ability);
+
+            // Add to phase section
+            const section = document.querySelector(`[data-phase="${phase}"]`);
+            if (section) {
+                section.insertAdjacentHTML('beforeend', renderAbility(ability));
+                setupDragAndDrop();
+            }
+
+            // Clear form
+            document.getElementById('ability-unit').value = '';
+            document.getElementById('ability-name').value = '';
+            document.getElementById('ability-desc').value = '';
+
+            saveCurrentList();
+            closeModal('add-ability-modal');
+        }
+
+        // ==================== STORAGE ====================
+        function saveCurrentList() {
+            if (!AppState.currentList) return;
+
+            const savedLists = getSavedLists();
+            savedLists[AppState.currentListId] = {
+                ...AppState.currentList,
+                lastModified: new Date().toISOString()
+            };
+            localStorage.setItem('savedLists', JSON.stringify(savedLists));
+        }
+
+        function getSavedLists() {
+            const saved = localStorage.getItem('savedLists');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function loadSavedLists() {
+            const savedLists = getSavedLists();
+            const container = document.getElementById('saved-lists-container');
+
+            if (Object.keys(savedLists).length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+
+            container.innerHTML = `
+                <h3>📋 Saved Lists</h3>
+                ${Object.entries(savedLists).map(([id, list]) => `
+                    <div class="list-card" onclick="loadList('${id}')">
+                        <div class="list-info">
+                            <h4>${list.name}</h4>
+                            <p>${list.faction} • ${list.points}pts • ${new Date(list.lastModified).toLocaleDateString()}</p>
+                        </div>
+                        <div class="list-actions">
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); loadList('${id}')">
+                                Open
+                            </button>
+                            <button class="btn btn-sm" style="background: var(--danger); color: white;" onclick="event.stopPropagation(); deleteSavedList('${id}')">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        function loadList(listId) {
+            const savedLists = getSavedLists();
+            const list = savedLists[listId];
+            
+            if (list) {
+                AppState.currentList = list;
+                AppState.currentListId = listId;
+                renderArmyView();
+            }
+        }
+
+        function deleteSavedList(listId) {
+            if (!confirm('Delete this saved list?')) return;
+
+            const savedLists = getSavedLists();
+            delete savedLists[listId];
+            localStorage.setItem('savedLists', JSON.stringify(savedLists));
+            loadSavedLists();
+        }
+
+        function deleteCurrentList() {
+            if (!confirm('Delete current list? This cannot be undone.')) return;
+
+            deleteSavedList(AppState.currentListId);
+            showUploadScreen();
+        }
+
+        // ==================== EXPORT ====================
+        function exportToJSON() {
+            const data = JSON.stringify(AppState.currentList, null, 2);
+            const blob = new Blob([data], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${AppState.currentList.name}_export.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            closeModal('menu-modal');
+        }
+
+        // ==================== NAVIGATION ====================
+        function showUploadScreen() {
+            document.getElementById('welcome-screen').style.display = 'block';
+            document.getElementById('army-view').style.display = 'none';
+            AppState.currentList = null;
+            AppState.currentListId = null;
+            closeModal('menu-modal');
+        }
+
+        function showSavedLists() {
+            showUploadScreen();
+            closeModal('menu-modal');
+        }
+
+        function showAddAbilityModal() {
+            closeModal('menu-modal');
+            openModal('add-ability-modal');
+        }
+
+        // ==================== MODAL HELPERS ====================
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        // Close modal on background click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // ==================== UTILITIES ====================
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function findAbilityById(id) {
+            return AppState.currentList?.abilities.find(a => a.id === id);
+        }
+    </script>
+</body>
+</html>
