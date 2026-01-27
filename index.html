@@ -1020,7 +1020,13 @@
             const uploadArea = document.getElementById('upload-area');
             const fileInput = document.getElementById('file-input');
 
-            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('click', (e) => {
+                // Don't trigger if clicking on a button inside the upload area
+                if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+                    return;
+                }
+                fileInput.click();
+            });
             
             uploadArea.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -1088,7 +1094,12 @@
                 
                 if (parsedList) {
                     AppState.currentList = parsedList;
-                    AppState.currentListId = Date.now().toString();
+                    AppState.currentListId = parsedList.id; // Use the ID generated during parsing
+                    
+                    // Save immediately after upload
+                    saveCurrentList();
+                    
+                    // Render the view
                     renderArmyView();
                 }
             } catch (error) {
@@ -1477,6 +1488,25 @@
 
         function handleDragEnd(e) {
             e.target.classList.remove('dragging');
+            
+            // Rebuild the abilities list based on current DOM order
+            const newAbilitiesList = [];
+            document.querySelectorAll('.phase-section').forEach(section => {
+                section.querySelectorAll('.ability').forEach(abilityElement => {
+                    const abilityId = abilityElement.dataset.abilityId;
+                    const ability = findAbilityById(abilityId);
+                    if (ability) {
+                        newAbilitiesList.push(ability);
+                    }
+                });
+            });
+            
+            // Update the abilities list with the new order
+            AppState.currentList.abilities = newAbilitiesList;
+            
+            // Re-categorize based on current positions
+            AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+            
             saveCurrentList();
         }
 
@@ -1529,12 +1559,11 @@
 
             const newAbility = { ...ability, id: generateId() };
             AppState.currentList.abilities.push(newAbility);
-
-            const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
-            const parent = element.parentElement;
             
-            element.insertAdjacentHTML('afterend', renderAbility(newAbility));
-            setupDragAndDrop();
+            // Re-categorize and re-render to properly place the duplicate
+            AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+            renderArmyView();
+            
             saveCurrentList();
         }
 
@@ -1558,7 +1587,14 @@
                 ability.unitName = document.getElementById('edit-ability-unit').value;
                 ability.abilityName = document.getElementById('edit-ability-name').value;
                 ability.description = document.getElementById('edit-ability-desc').value;
-
+                
+                // Check if enemy-triggered status changed based on new description
+                ability.isEnemy = checkIfEnemy(ability.description);
+                
+                // Re-categorize abilities since content changed
+                AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+                
+                // Re-render the entire view to reflect changes
                 renderArmyView();
                 saveCurrentList();
             }
@@ -1567,8 +1603,6 @@
         }
 
         function deleteAbility(abilityId) {
-            if (!confirm('Delete this ability?')) return;
-
             const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
             element.remove();
 
@@ -1602,13 +1636,12 @@
             };
 
             AppState.currentList.abilities.push(ability);
-
-            // Add to phase section
-            const section = document.querySelector(`[data-phase="${phase}"]`);
-            if (section) {
-                section.insertAdjacentHTML('beforeend', renderAbility(ability));
-                setupDragAndDrop();
-            }
+            
+            // Re-categorize to ensure proper placement
+            AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+            
+            // Re-render to show the new ability in the correct phase
+            renderArmyView();
 
             // Clear form
             document.getElementById('ability-unit').value = '';
@@ -1688,8 +1721,15 @@
             const list = savedLists[listId];
             
             if (list) {
-                AppState.currentList = list;
+                // Deep clone to avoid reference issues
+                AppState.currentList = JSON.parse(JSON.stringify(list));
                 AppState.currentListId = listId;
+                
+                // Ensure categorized data exists
+                if (!AppState.currentList.categorized) {
+                    AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+                }
+                
                 renderArmyView();
             }
         }
