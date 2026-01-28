@@ -64,6 +64,10 @@
             color: var(--text-dark);
         }
         
+        html {
+            scroll-behavior: smooth;
+        }
+        
         /* ==================== LAYOUT ==================== */
         .app-container {
             max-width: 1200px;
@@ -110,7 +114,7 @@
         
         .content {
             flex: 1;
-            padding: 20px;
+            padding: 10px;
             background: var(--bg-light);
         }
         
@@ -122,7 +126,7 @@
         .btn {
             padding: 10px 20px;
             border: none;
-            border-radius: 10px;
+            border-radius: 5px;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -207,7 +211,7 @@
         .upload-area {
             background: white;
             border: 3px dashed var(--border-light);
-            border-radius: 15px;
+            border-radius: 8px;
             padding: 40px;
             margin: 20px auto;
             max-width: 500px;
@@ -253,7 +257,7 @@
         
         .list-card {
             background: white;
-            border-radius: 10px;
+            border-radius: 6px;
             padding: 15px;
             margin-bottom: 10px;
             display: flex;
@@ -299,9 +303,9 @@
         /* ==================== ARMY VIEW ==================== */
         .army-header {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
             box-shadow: var(--shadow);
         }
         
@@ -332,12 +336,12 @@
         .stats-panel {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 10px;
         }
         
         .stat-item {
@@ -345,22 +349,22 @@
         }
         
         .stat-value {
-            font-size: 2rem;
+            font-size: 1.3rem;
             font-weight: 800;
         }
         
         .stat-label {
-            font-size: 0.9rem;
+            font-size: 0.75rem;
             opacity: 0.9;
-            margin-top: 5px;
+            margin-top: 2px;
         }
         
         /* ==================== SEARCH & FILTER ==================== */
         .controls-bar {
             background: white;
-            border-radius: 15px;
-            padding: 15px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
             box-shadow: var(--shadow);
         }
         
@@ -370,11 +374,11 @@
         
         .search-box {
             width: 100%;
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 2px solid var(--border-light);
-            border-radius: 10px;
+            border-radius: 5px;
             font-size: 16px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             transition: border-color 0.3s;
         }
         
@@ -399,7 +403,7 @@
             padding: 8px 16px;
             border: 2px solid var(--border-light);
             background: white;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             transition: all 0.2s;
             font-weight: 600;
@@ -426,9 +430,9 @@
         /* ==================== PHASE SECTIONS ==================== */
         .phase-section {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
             border-left: 5px solid var(--primary);
             box-shadow: var(--shadow);
         }
@@ -451,9 +455,9 @@
         .ability {
             position: relative;
             background: var(--bg-light-alt);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 8px;
             border-left: 4px solid var(--info);
             transition: all 0.2s ease;
             cursor: grab;
@@ -576,6 +580,67 @@
             color: var(--text-dark);
         }
         
+        .ability-keywords {
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid var(--border-light);
+            font-size: 0.8rem;
+            color: var(--text-light-secondary);
+            font-style: italic;
+        }
+        
+        body.dark-mode .ability-keywords {
+            border-top-color: var(--border-dark);
+            color: var(--text-dark-secondary);
+        }
+        
+        /* ==================== PHASE NAVIGATION ==================== */
+        .phase-nav {
+            background: white;
+            border-radius: 6px;
+            padding: 8px 10px;
+            margin-bottom: 10px;
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        body.dark-mode .phase-nav {
+            background: var(--bg-dark-alt);
+        }
+        
+        .phase-nav-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-light-alt);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: var(--text-light);
+        }
+        
+        .phase-nav-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        body.dark-mode .phase-nav-btn {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+        
+        body.dark-mode .phase-nav-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
         /* ==================== MODAL ==================== */
         .modal {
             display: none;
@@ -597,8 +662,8 @@
         
         .modal-content {
             background: white;
-            border-radius: 20px;
-            padding: 30px;
+            border-radius: 8px;
+            padding: 25px;
             max-width: 500px;
             width: 100%;
             max-height: 90vh;
@@ -658,7 +723,7 @@
             width: 100%;
             padding: 10px;
             border: 2px solid var(--border-light);
-            border-radius: 8px;
+            border-radius: 5px;
             font-size: 14px;
             font-family: inherit;
         }
@@ -679,9 +744,9 @@
         /* ==================== NOTES ==================== */
         .notes-panel {
             background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
             box-shadow: var(--shadow);
         }
         
@@ -932,6 +997,9 @@
                 <button class="btn btn-primary" id="menu-add-ability" onclick="showAddAbilityModal()">
                     ➕ Add Custom Ability
                 </button>
+                <button class="btn btn-primary" id="menu-add-stratagems" onclick="showStratagemModal()">
+                    🎲 Add Stratagems from Wahapedia
+                </button>
                 <button class="btn btn-primary" id="menu-export" onclick="exportToJSON()">
                     📤 Export to JSON
                 </button>
@@ -948,6 +1016,35 @@
                     🗑️ Delete Current List
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Stratagem Modal -->
+    <div class="modal" id="stratagem-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add Stratagems</h3>
+                <button class="close-modal" onclick="closeModal('stratagem-modal')">✕</button>
+            </div>
+            <form id="stratagem-form">
+                <div class="form-group">
+                    <label>Wahapedia Faction URL</label>
+                    <input type="url" id="wahapedia-url" placeholder="https://wahapedia.ru/wh40k10ed/factions/space-marines" required>
+                    <small style="color: var(--text-light-secondary); margin-top: 5px; display: block;">
+                        Enter the Wahapedia URL for your faction to fetch stratagems
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="include-core-stratagems" style="width: auto; margin-right: 5px;">
+                        Include Core Stratagems
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    🔍 Fetch Stratagems
+                </button>
+                <div id="stratagem-status" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
+            </form>
         </div>
     </div>
 
@@ -1234,11 +1331,23 @@
             const desc = description.toLowerCase().replace(/[´']/g, '');
             const enemyKeywords = [
                 'each time an enemy unit',
+                'each time an enemy model',
                 'in your opponents',
                 'end of your opponents',
                 'start of your opponents',
+                'during your opponents',
                 'model is destroyed',
-                'after an enemy unit has'
+                'after an enemy unit has',
+                'when an enemy',
+                'if an enemy',
+                'opponent',
+                'your opponents command',
+                'your opponents movement',
+                'your opponents shooting',
+                'your opponents charge',
+                'your opponents fight',
+                'enemy unit',
+                'enemy model'
             ];
             return enemyKeywords.some(kw => desc.includes(kw));
         }
@@ -1360,6 +1469,16 @@
                     </div>
                 </div>
 
+                <div class="phase-nav">
+                    <a href="#phase-deployment" class="phase-nav-btn">🚀 Deploy</a>
+                    <a href="#phase-command" class="phase-nav-btn">📋 Command</a>
+                    <a href="#phase-movement" class="phase-nav-btn">🏃 Movement</a>
+                    <a href="#phase-shooting" class="phase-nav-btn">🎯 Shooting</a>
+                    <a href="#phase-charge" class="phase-nav-btn">⚡ Charge</a>
+                    <a href="#phase-fight" class="phase-nav-btn">⚔️ Fight</a>
+                    <a href="#phase-any" class="phase-nav-btn">🔄 Any</a>
+                </div>
+
                 <div class="notes-panel">
                     <h3>📝 Battle Notes</h3>
                     <textarea class="notes-textarea" id="notes-area" placeholder="Take notes about your battle plan...">${list.notes || ''}</textarea>
@@ -1376,11 +1495,24 @@
         function renderPhases(categorized) {
             let html = '';
             
+            const phaseIds = {
+                'DEPLOYMENT / RESERVES': 'phase-deployment',
+                'COMMAND PHASE': 'phase-command',
+                'MOVEMENT PHASE': 'phase-movement',
+                'SHOOTING PHASE': 'phase-shooting',
+                'CHARGE PHASE': 'phase-charge',
+                'FIGHT PHASE': 'phase-fight',
+                'ANY PHASE': 'phase-any',
+                'OTHER': 'phase-other'
+            };
+            
             for (const [phase, abilities] of Object.entries(categorized)) {
                 if (abilities.length === 0) continue;
 
+                const phaseId = phaseIds[phase] || 'phase-other';
+                
                 html += `
-                    <div class="phase-section" data-phase="${phase}">
+                    <div class="phase-section" data-phase="${phase}" id="${phaseId}">
                         <h3>${phase}</h3>
                         ${abilities.map(ability => renderAbility(ability)).join('')}
                     </div>
@@ -1397,6 +1529,12 @@
             if (ability.isDetachment) classes.push('detachment');
 
             const description = formatDescription(ability.description);
+            
+            // Extract keywords (boldened words)
+            const keywords = extractKeywords(ability.description);
+            const keywordsHTML = keywords.length > 0 
+                ? `<div class="ability-keywords">Keywords: ${keywords.join(', ')}</div>`
+                : '';
 
             return `
                 <div class="${classes.join(' ')}" data-ability-id="${ability.id}" draggable="true">
@@ -1409,8 +1547,19 @@
                     <div class="unit-name">${ability.unitName}</div>
                     <div class="ability-name">${ability.abilityName}</div>
                     <div class="ability-desc">${description}</div>
+                    ${keywordsHTML}
                 </div>
             `;
+        }
+        
+        function extractKeywords(text) {
+            // Extract all words that would be bolded (all-caps words of 2+ letters)
+            const matches = text.match(/\b[A-Z]{2,}\b/g);
+            if (!matches) return [];
+            
+            // Remove duplicates and sort
+            const unique = [...new Set(matches)];
+            return unique.sort();
         }
 
         function formatDescription(text) {
@@ -1558,9 +1707,14 @@
             if (!ability) return;
 
             const newAbility = { ...ability, id: generateId() };
-            AppState.currentList.abilities.push(newAbility);
             
-            // Re-categorize and re-render to properly place the duplicate
+            // Find the index of the original ability
+            const originalIndex = AppState.currentList.abilities.findIndex(a => a.id === abilityId);
+            
+            // Insert the duplicate right after the original
+            AppState.currentList.abilities.splice(originalIndex + 1, 0, newAbility);
+            
+            // Re-categorize and re-render
             AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
             renderArmyView();
             
@@ -1785,6 +1939,7 @@
             // Disable/enable buttons based on active list
             const menuButtons = {
                 'menu-add-ability': hasActiveList,
+                'menu-add-stratagems': hasActiveList,
                 'menu-export': hasActiveList,
                 'menu-save': hasActiveList,
                 'menu-delete': hasActiveList
@@ -1819,6 +1974,60 @@
             }
             closeModal('menu-modal');
             openModal('add-ability-modal');
+        }
+        
+        function showStratagemModal() {
+            if (!AppState.currentList) {
+                alert('Please load an army list first');
+                return;
+            }
+            closeModal('menu-modal');
+            openModal('stratagem-modal');
+        }
+        
+        // Handle stratagem form submission
+        document.addEventListener('DOMContentLoaded', () => {
+            const stratagemForm = document.getElementById('stratagem-form');
+            if (stratagemForm) {
+                stratagemForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    await fetchStratagemFromWahapedia();
+                });
+            }
+        });
+        
+        async function fetchStratagemFromWahapedia() {
+            const url = document.getElementById('wahapedia-url').value;
+            const includeCore = document.getElementById('include-core-stratagems').checked;
+            const statusDiv = document.getElementById('stratagem-status');
+            
+            statusDiv.innerHTML = '⏳ Fetching stratagems...';
+            statusDiv.style.color = 'var(--info)';
+            
+            try {
+                // Note: Actual fetch would require CORS proxy or backend
+                // This is a placeholder for the structure
+                alert('Note: Stratagem fetching from Wahapedia requires a CORS proxy or backend service. ' +
+                      'For now, you can manually add stratagems using "Add Custom Ability" and marking them as stratagems.');
+                
+                statusDiv.innerHTML = '⚠️ Manual entry required (see alert)';
+                statusDiv.style.color = 'var(--warning)';
+                
+                // Placeholder for actual implementation:
+                /*
+                const detachmentName = AppState.currentList.detachment;
+                const response = await fetch(proxyUrl + url);
+                const html = await response.text();
+                // Parse stratagems from HTML
+                // Add to AppState.currentList.abilities
+                // Re-categorize and render
+                */
+                
+            } catch (error) {
+                statusDiv.innerHTML = '❌ Error fetching stratagems';
+                statusDiv.style.color = 'var(--danger)';
+                console.error(error);
+            }
         }
 
         // ==================== MODAL HELPERS ====================
