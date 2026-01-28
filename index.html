@@ -580,18 +580,73 @@
             color: var(--text-dark);
         }
         
-        .ability-keywords {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid var(--border-light);
-            font-size: 0.8rem;
-            color: var(--text-light-secondary);
-            font-style: italic;
+        /* ==================== STICKY TOOLBAR ==================== */
+        .sticky-toolbar {
+            position: sticky;
+            top: 56px;
+            background: white;
+            border-radius: 0 0 6px 6px;
+            padding: 6px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 4px;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 90;
+            flex-wrap: wrap;
         }
         
-        body.dark-mode .ability-keywords {
-            border-top-color: var(--border-dark);
-            color: var(--text-dark-secondary);
+        body.dark-mode .sticky-toolbar {
+            background: var(--bg-dark-alt);
+        }
+        
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 10px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-light-alt);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            color: var(--text-light);
+            min-width: 28px;
+            text-align: center;
+        }
+        
+        .toolbar-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-1px);
+        }
+        
+        body.dark-mode .toolbar-btn {
+            background: var(--bg-dark);
+            border-color: var(--border-dark);
+            color: var(--text-dark);
+        }
+        
+        body.dark-mode .toolbar-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+        
+        .toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: var(--border-light);
+            margin: 0 2px;
+        }
+        
+        body.dark-mode .toolbar-divider {
+            background: var(--border-dark);
         }
         
         /* ==================== PHASE NAVIGATION ==================== */
@@ -601,7 +656,7 @@
             padding: 8px 10px;
             margin-bottom: 10px;
             box-shadow: var(--shadow);
-            display: flex;
+            display: none;
             gap: 6px;
             flex-wrap: wrap;
             justify-content: center;
@@ -1636,36 +1691,7 @@
             const description = formatDescription(ability.description);
             
             // Extract keywords (boldened words)
-            const keywords = extractKeywords(ability.description);
-            const keywordsHTML = keywords.length > 0 
-                ? `<div class="ability-keywords">Keywords: ${keywords.join(', ')}</div>`
-                : '';
-
-            return `
-                <div class="${classes.join(' ')}" data-ability-id="${ability.id}" draggable="true">
-                    <div class="ability-controls">
-                        <button class="color-btn" onclick="toggleEnemyColor('${ability.id}')" title="Toggle color">🎨</button>
-                        <button class="duplicate-btn" onclick="duplicateAbility('${ability.id}')" title="Duplicate">📑</button>
-                        <button class="edit-btn" onclick="editAbility('${ability.id}')" title="Edit">✏️</button>
-                        <button class="delete-btn" onclick="deleteAbility('${ability.id}')" title="Delete">✕</button>
-                    </div>
-                    <div class="unit-name">${ability.unitName}</div>
-                    <div class="ability-name">${ability.abilityName}</div>
-                    <div class="ability-desc">${description}</div>
-                    ${keywordsHTML}
-                </div>
-            `;
-        }
         
-        function extractKeywords(text) {
-            // Extract all words that would be bolded (all-caps words of 2+ letters)
-            const matches = text.match(/\b[A-Z]{2,}\b/g);
-            if (!matches) return [];
-            
-            // Remove duplicates and sort
-            const unique = [...new Set(matches)];
-            return unique.sort();
-        }
 
         function formatDescription(text) {
             // Bold keywords
