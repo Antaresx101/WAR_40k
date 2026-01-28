@@ -859,6 +859,38 @@
         .install-prompt.hidden {
             display: none;
         }
+        
+        /* ==================== UPDATE BANNER ==================== */
+        .update-banner {
+            background: linear-gradient(135deg, var(--info) 0%, #3182ce 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.3s ease;
+        }
+        
+        .update-banner.hidden {
+            display: none;
+        }
+        
+        .update-banner button {
+            background: white;
+            color: var(--info);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .update-banner button:hover {
+            background: rgba(255, 255, 255, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -890,12 +922,24 @@
             </div>
         </div>
 
+        <!-- Update Banner -->
+        <div class="update-banner hidden" id="update-banner">
+            <div>
+                <strong>🔄 Update Available!</strong>
+                <p style="font-size: 0.9rem; margin-top: 5px;">A new version is ready to install</p>
+            </div>
+            <button id="update-btn">Update Now</button>
+        </div>
+
         <!-- Content -->
         <main class="content" id="main-content">
             <!-- Welcome Screen -->
             <div id="welcome-screen" class="welcome-screen">
                 <h2>Welcome to Your Ability Reference</h2>
                 <p>Upload your army list to get started</p>
+                <p style="font-size: 0.8rem; color: var(--text-light-secondary); margin-top: -15px;">
+                    Version ${AppState.appVersion}
+                </p>
                 
                 <div class="upload-area" id="upload-area">
                     <div class="upload-icon">📤</div>
@@ -1055,7 +1099,8 @@
             currentListId: null,
             isDarkMode: false,
             deferredPrompt: null,
-            draggedElement: null
+            draggedElement: null,
+            appVersion: '1.2.0' // Update this when making changes
         };
 
         // ==================== INITIALIZATION ====================
@@ -1072,13 +1117,73 @@
         }
 
         // ==================== SERVICE WORKER ====================
+        let newWorker;
+        
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js')
-                    .then(reg => console.log('Service Worker registered'))
-                    .catch(err => console.log('Service Worker registration failed'));
+                    .then(reg => {
+                        console.log('Service Worker registered');
+                        
+                        // Check for updates every 60 seconds
+                        setInterval(() => {
+                            reg.update();
+                        }, 60000);
+                        
+                        // Detect waiting service worker (update available)
+                        reg.addEventListener('updatefound', () => {
+                            newWorker = reg.installing;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker available
+                                    showUpdateBanner();
+                                }
+                            });
+                        });
+                        
+                        // Check if there's already a waiting worker
+                        if (reg.waiting) {
+                            newWorker = reg.waiting;
+                            showUpdateBanner();
+                        }
+                        
+                        // Listen for controller change (new SW took over)
+                        navigator.serviceWorker.addEventListener('controllerchange', () => {
+                            // Reload to get latest version
+                            window.location.reload();
+                        });
+                    })
+                    .catch(err => console.log('Service Worker registration failed:', err));
             }
         }
+        
+        function showUpdateBanner() {
+            const banner = document.getElementById('update-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+            }
+        }
+        
+        function hideUpdateBanner() {
+            const banner = document.getElementById('update-banner');
+            if (banner) {
+                banner.classList.add('hidden');
+            }
+        }
+        
+        // Handle update button click
+        document.addEventListener('DOMContentLoaded', () => {
+            const updateBtn = document.getElementById('update-btn');
+            if (updateBtn) {
+                updateBtn.addEventListener('click', () => {
+                    if (newWorker) {
+                        // Tell the waiting worker to skip waiting and activate
+                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    }
+                });
+            }
+        });
 
         // ==================== INSTALL PROMPT ====================
         function setupInstallPrompt() {
