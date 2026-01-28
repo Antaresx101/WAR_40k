@@ -1,4 +1,5 @@
 const CACHE_NAME = 'wh40k-reference-v1';
+const CACHE_VERSION = 'v1.3.0';
 const urlsToCache = [
   '/wh40k-reference.html',
   '/manifest.json'
