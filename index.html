@@ -4,12 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Warhammer Ability Reference - 40k : Organize and manage your army abilities">
+    
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="WAR_40k">
     
     <title>Warhammer Ability Reference - 40k</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;700&family=Exo+2:wght@400;700&display=swap" rel="stylesheet">
     
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
@@ -28,8 +34,8 @@
             --primary: #3a5b8de1;
             --primary-dark: #e6eaec;
             --secondary: #e6eaec;
-            --menu-primary: #3a5b8d7a;
-            --menu-secondary: #3a5b8d7a;
+            --menu: #3a5b8d7a;
+            --menu-dark: #42c2e2;
             --accent: #42c2e2;
             --success: #48bb78;
             --warning: #ed8936;
@@ -100,12 +106,13 @@
         .app-title {
             font-size: clamp(0.8rem, 4vw, 1.2rem);
             font-weight: 700;
-            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+            font-family: 'Orbitron', 'Rajdhani', 'Exo 2', 'Segoe UI', sans-serif;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.5px;
+            text-transform: uppercase;
         }
         
         .header-actions {
@@ -162,7 +169,7 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, var(--menu-primary) 0%, var(--menu-secondary) 100%);
+            background: var(--menu);
             color: white;
         }
         
@@ -170,7 +177,12 @@
             background: var(--bg-light-alt);
             color: var(--text-light);
         }
-        
+
+        body.dark-mode .btn-primary {
+            background: var(--menu-dark);
+            color: white;
+        }
+
         body.dark-mode .btn-secondary {
             background: var(--bg-dark-alt);
             color: var(--text-dark);
@@ -189,7 +201,7 @@
             padding: 6px 12px;
             font-size: 12px;
         }
-        
+
         /* ==================== WELCOME SCREEN ==================== */
         .welcome-screen {
             text-align: center;
@@ -1133,20 +1145,20 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1 class="app-title">Warhammer Ability Reference - 40k</h1>
+                <h1 class="app-title">WH 40k</h1>
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
-                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="display: none;">
-                        &#10010;
+                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List">
+                        ✚
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App" style="display: none;">
-                        📱
+                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-size: 1rem; padding-bottom: 6.5px">
+                        ⤓
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App">
-                        🔄
+                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App" style="font-size: 0.9rem; padding-bottom: 6.5px">
+                        ⟳
                     </button>
                     <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
-                        &#127763;
+                        ☀️
                     </button>
                 </div>
             </div>
@@ -1233,7 +1245,7 @@
                     <textarea id="ability-desc" required></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    ➕ Add Ability
+                    &#10010; Add Ability
                 </button>
             </form>
         </div>
@@ -1276,10 +1288,10 @@
             </div>
             <form id="stratagem-form">
                 <div class="form-group">
-                    <label>Wahapedia Faction URL</label>
-                    <input type="url" id="wahapedia-url" placeholder="https://wahapedia.ru/wh40k10ed/factions/space-marines" required>
+                    <label>Faction URL</label>
+                    <input type="url" id="stratagem-url" placeholder="" required>
                     <small style="color: var(--text-light-secondary); margin-top: 5px; display: block;">
-                        Enter the Wahapedia URL for your faction to fetch stratagems
+                        To be implemented
                     </small>
                 </div>
                 <div class="form-group">
@@ -1506,6 +1518,13 @@
         async function handleFileUpload(file) {
             try {
                 console.log('Starting file upload for:', file.name);
+                
+                // Save current list if one exists
+                if (AppState.currentList && AppState.currentListId) {
+                    console.log('Saving current list before loading new one');
+                    saveCurrentList();
+                }
+                
                 const text = await file.text();
                 console.log('File text length:', text.length);
                 const data = JSON.parse(text);
@@ -1831,7 +1850,7 @@
                 </div>
 
                 <div class="controls-bar">
-                    <input type="text" class="search-box" id="search-box" placeholder="Search abilities...">
+                    <input type="text" class="search-box" id="search-box" placeholder="Search abilities / unit names...">
                     <div class="filter-buttons">
                         <button class="filter-btn active" data-filter="all">All</button>
                         <button class="filter-btn" data-filter="detachment">Detachment</button>
@@ -2689,13 +2708,13 @@
             if (stratagemForm) {
                 stratagemForm.addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    await fetchStratagemFromWahapedia();
+                    await fetchStratagems();
                 });
             }
         });
         
-        async function fetchStratagemFromWahapedia() {
-            const url = document.getElementById('wahapedia-url').value;
+        async function fetchStratagems() {
+            const url = document.getElementById('stratagem-url').value;
             const includeCore = document.getElementById('include-core-stratagems').checked;
             const statusDiv = document.getElementById('stratagem-status');
             
