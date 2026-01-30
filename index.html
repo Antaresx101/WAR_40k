@@ -1235,11 +1235,11 @@
                     <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="font-size: 1rem;">
                         ✛
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-weight: 300; font-size: 1.2rem;">
-                        ⤓
-                    </button>
                     <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App" style="font-size: 0.9rem; padding-bottom: 5px;">
                         ⟳
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-weight: 300; font-size: 1.2rem;">
+                        ⤓
                     </button>
                     <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
                         ☀️
@@ -1414,7 +1414,6 @@
             loadSavedLists();
             registerServiceWorker();
             setupInstallPrompt();
-            updateAddListButtonVisibility();
             
             // Set default sort button state
             const defaultSortBtn = document.querySelector('[data-sort="name"]');
@@ -1838,7 +1837,13 @@
             };
 
             for (const ability of abilities) {
-                const desc = ability.description.toLowerCase().replace(/[´']/g, '');
+                let desc = ability.description.toLowerCase().replace(/[´']/g, '');
+                
+                // Remove stratagem prefixes to avoid false keyword matches
+                desc = desc.replace(/^when:\s*/i, '');
+                desc = desc.replace(/^target:\s*/i, '');
+                desc = desc.replace(/^effect:\s*/i, '');
+                
                 console.log(`Processing ability: ${ability.abilityName} - Description: ${desc.substring(0, 100)}...`);
                 let found = false;
 
@@ -1940,6 +1945,7 @@
                         <button class="filter-btn" data-filter="detachment">Detachment</button>
                         <button class="filter-btn" data-filter="stratagem">Stratagems</button>
                         <button class="filter-btn" data-filter="enemy">Reactions</button>
+                        <button class="filter-btn" onclick="fetchAndAddStratagems()" title="Fetch stratagems from database">📥 Fetch</button>
                     </div>
                 </div>
 
@@ -1957,7 +1963,6 @@
 
             setupArmyViewListeners();
             setupSmoothScroll();
-            updateAddListButtonVisibility();
             applyExclusionFilter();
             
             // Reset filter to "All" and clear search after DOM is ready
@@ -2738,16 +2743,6 @@
         }
 
         // UI state management
-        function updateAddListButtonVisibility() {
-            const addListBtn = document.getElementById('add-list-btn');
-            const welcomeScreen = document.getElementById('welcome-screen');
-            
-            if (addListBtn) {
-                // Show button when on welcome screen, hide when in army view
-                addListBtn.style.display = welcomeScreen.style.display !== 'none' ? 'block' : 'none';
-            }
-        }
-
         function updateAppVersion() {
             const versionElement = document.getElementById('app-version');
             if (versionElement) {
@@ -2763,7 +2758,6 @@
             AppState.currentList = null;
             AppState.currentListId = null;
             loadSavedLists(); // Refresh the saved lists display
-            updateAddListButtonVisibility();
         }
 
         function showSavedLists() {
@@ -2855,6 +2849,222 @@
 
         function findAbilityById(id) {
             return AppState.currentList?.abilities.find(a => a.id === id);
+        }
+
+        // ========================================
+        // STRATAGEM FETCHER FUNCTIONALITY
+        // ========================================
+        
+        const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/game-datacards/datasources/main/10th/gdc/';
+        const FACTION_FILES = {
+            'grey knights': 'greyknights.json',
+            'space marines': 'space_marines.json',
+            'necrons': 'necrons.json',
+            'tyranids': 'tyranids.json',
+            'orks': 'orks.json',
+            'aeldari': 'aeldari.json',
+            "t'au empire": 'tau.json',
+            "tau empire": 'tau.json',
+            'chaos space marines': 'chaos_spacemarines.json',
+            'chaos daemons': 'chaosdaemons.json',
+            'astra militarum': 'astramilitarum.json',
+            'adeptus custodes': 'adeptuscustodes.json',
+            'adepta sororitas': 'adeptasororitas.json',
+            'adeptus mechanicus': 'adeptusmechanicus.json',
+            'death guard': 'deathguard.json',
+            'thousand sons': 'thousandsons.json',
+            'world eaters': 'worldeaters.json',
+            'drukhari': 'drukhari.json',
+            'genestealer cults': 'gsc.json',
+            'imperial knights': 'imperialknights.json',
+            'leagues of votann': 'votann.json'
+        };
+
+
+        function getCoreStratagems() {
+            return [
+                {name: 'Command Re-roll', cp: '1CP', when: 'Any Phase', description: 'Use this Stratagem after you have made a Hit roll, a Wound roll, a Damage roll, a saving throw, an Advance roll, a Charge roll, a Desperate Escape test, a Hazardous test, or after you have rolled the dice to determine the number of attacks made with a weapon. Re-roll that roll, test or saving throw.'},
+                {name: 'Counter-Offensive', cp: '2CP', when: 'Fight Phase', description: 'Use this Stratagem after an enemy unit has fought in this turn. Select one of your own eligible units and fight with it next.'},
+                {name: 'Epic Challenge', cp: '1CP', when: 'Fight Phase', description: 'Use this Stratagem at the start of the Fight phase. Select one CHARACTER model from your army and one enemy CHARACTER model. Those models must make an Epic Challenge roll-off. Both players roll one D6 and add their model\'s Leadership characteristic to the result. If one model\'s roll is higher, until the end of the phase, add 1 to Hit rolls and Wound rolls made for that model, and subtract 1 from Hit rolls and Wound rolls made for the other model.'},
+                {name: 'Fire Overwatch', cp: '1CP', when: 'Charge Phase', description: 'Use this Stratagem when an enemy unit has declared a charge. Select one of your own units that has been targeted by that charge. That unit can fire Overwatch.'},
+                {name: 'Go to Ground', cp: '1CP', when: 'Shooting Phase', description: 'Use this Stratagem in your opponent\'s Shooting phase when an enemy unit targets one of your INFANTRY units (excluding units that are always treated as being in cover). Until the end of the phase, all models in that unit have a 6+ invulnerable save, and they gain the Benefit of Cover.'},
+                {name: 'Heroic Intervention', cp: '2CP', when: 'Charge Phase', description: 'Use this Stratagem at the end of the enemy\'s Charge phase. Select one of your CHARACTER units that is within 6" of an enemy unit and perform a Heroic Intervention with it.'},
+                {name: 'Insane Bravery', cp: '2CP', when: 'Command Phase', description: 'Use this Stratagem at the start of your Command phase. Select one of your units that is Below Half-strength. Until the start of your next Command phase, that unit is no longer Below Half-strength for any rules purposes.'},
+                {name: 'Rapid Ingress', cp: '1CP', when: 'Movement Phase', description: 'Use this Stratagem at the end of your opponent\'s Movement phase. Select one of your units that is in Strategic Reserves. That unit can arrive on the battlefield as if it were the Reinforcements step of your next Movement phase.'},
+                {name: 'Smokescreen', cp: '1CP', when: 'Shooting Phase', description: 'Use this Stratagem in your opponent\'s Shooting phase when one of your SMOKE units has been selected as the target of a shooting attack. Until the end of the phase, all models in that unit have the Benefit of Cover and gain the Stealth ability.'},
+                {name: 'Tank Shock', cp: '1CP', when: 'Charge Phase', description: 'Use this Stratagem in your Charge phase when one of your VEHICLE units ends a Charge move. Select one enemy unit within Engagement Range of that VEHICLE unit and roll one D6 for each model in that unit: for each 6, that enemy unit suffers 1 mortal wound.'}
+            ];
+        }
+
+        async function fetchAndAddStratagems() {
+            if (!AppState.currentList) {
+                alert('Please load an army list first');
+                return;
+            }
+            
+            try {
+                const factionName = AppState.currentList.faction.toLowerCase().trim();
+                const detachmentName = AppState.currentList.detachment || '';
+                
+                let factionFile = FACTION_FILES[factionName];
+                if (!factionFile) {
+                    for (const [key, value] of Object.entries(FACTION_FILES)) {
+                        if (factionName.includes(key) || key.includes(factionName)) {
+                            factionFile = value;
+                            break;
+                        }
+                    }
+                }
+                
+                if (!factionFile) {
+                    throw new Error(`Faction "${factionName}" not found. Available: ${Object.keys(FACTION_FILES).join(', ')}`);
+                }
+                
+                const url = GITHUB_BASE_URL + factionFile;
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const factionData = await response.json();
+                const stratagems = [];
+                
+                // Extract stratagems from the stratagems array
+                // Stratagems are stored in factionData.stratagems
+                if (factionData.stratagems && Array.isArray(factionData.stratagems)) {
+                    factionData.stratagems.forEach(item => {
+                        // Check if matches the current detachment
+                        const itemDetachment = item.detachment || '';
+                        const matchesDetachment = !detachmentName || 
+                            itemDetachment.toLowerCase().includes(detachmentName.toLowerCase()) ||
+                            detachmentName.toLowerCase().includes(itemDetachment.toLowerCase());
+                        
+                        if (matchesDetachment) {
+                            // Format phase array to readable text
+                            let phaseText = 'Any Phase';
+                            if (item.phase && Array.isArray(item.phase)) {
+                                const phaseMap = {
+                                    'movement': 'Movement Phase',
+                                    'shooting': 'Shooting Phase', 
+                                    'fight': 'Fight Phase',
+                                    'charge': 'Charge Phase',
+                                    'command': 'Command Phase'
+                                };
+                                phaseText = item.phase.map(p => phaseMap[p] || p.charAt(0).toUpperCase() + p.slice(1) + ' Phase').join(', ');
+                            } else if (item.when) {
+                                phaseText = item.when;
+                            }
+                            
+                            // Build formatted description
+                            let formattedDesc = '';
+                            if (item.target) {
+                                formattedDesc += `TARGET: ${item.target}\n\n`;
+                            }
+                            formattedDesc += `EFFECT: ${item.effect}` || `EFFECT: ${item.description}` || '';
+                            
+                            stratagems.push({
+                                name: item.name || 'Unknown Stratagem',
+                                cp: item.cost ? `${item.cost}CP` : '?CP',
+                                when: phaseText,
+                                description: formattedDesc,
+                                source: 'Detachment'
+                            });
+                        }
+                    });
+                }
+                
+                // If no stratagems found for specific detachment, ask if user wants all faction stratagems
+                if (stratagems.length === 0 && detachmentName) {
+                    const useAll = confirm(`No stratagems found for detachment "${detachmentName}". Use all faction stratagems instead?`);
+                    if (useAll) {
+                        factionData.stratagems.forEach(item => {
+                            // Format phase array to readable text
+                            let phaseText = 'Any Phase';
+                            if (item.phase && Array.isArray(item.phase)) {
+                                const phaseMap = {
+                                    'movement': 'Movement Phase',
+                                    'shooting': 'Shooting Phase', 
+                                    'fight': 'Fight Phase',
+                                    'charge': 'Charge Phase',
+                                    'command': 'Command Phase'
+                                };
+                                phaseText = item.phase.map(p => phaseMap[p] || p.charAt(0).toUpperCase() + p.slice(1) + ' Phase').join(', ');
+                            } else if (item.when) {
+                                phaseText = item.when;
+                            }
+                            
+                            // Build formatted description
+                            let formattedDesc = '';
+                            if (item.target) {
+                                formattedDesc += `TARGET: ${item.target}\n\n`;
+                            }
+                            formattedDesc += `EFFECT: ${item.effect}` || `EFFECT: ${item.description}` || '';
+                            
+                            stratagems.push({
+                                name: item.name || 'Unknown Stratagem',
+                                cp: item.cost ? `${item.cost}CP` : '?CP',
+                                when: phaseText,
+                                description: formattedDesc,
+                                source: 'Detachment'
+                            });
+                        });
+                    }
+                }
+                
+                const includeCore = confirm('Include core stratagems (10 universal stratagems)?');
+                if (includeCore) {
+                    stratagems.push(...getCoreStratagems().map(s => ({...s, source: 'Core'})));
+                }
+                
+                if (stratagems.length === 0) {
+                    throw new Error('No stratagems found');
+                }
+                
+                let addedCount = 0;
+                stratagems.forEach(strat => {
+                    const ability = {
+                        id: generateId(),
+                        unitName: `STRATAGEM (${strat.source})`,
+                        abilityName: `${strat.name} [${strat.cp}]`,
+                        description: `WHEN: ${strat.when}\n\n${strat.description}`,
+                        isDetachment: strat.source === 'Detachment',
+                        isStratagem: true,
+                        isEnemy: checkIfEnemy(strat.description),
+                        source: 'stratagem'
+                    };
+                    
+                    AppState.currentList.abilities.push(ability);
+                    addedCount++;
+                });
+                
+                AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+                renderArmyView();
+                saveCurrentList();
+                
+                alert(`Successfully added ${addedCount} stratagems!`);
+                
+            } catch (error) {
+                console.error('Error fetching stratagems:', error);
+                alert(`Error fetching stratagems: ${error.message}`);
+            }
+        }
+
+        async function promptDetachmentSelection(detachments) {
+            if (!detachments || detachments.length === 0) return null;
+            
+            const detachmentNames = detachments.map((d, i) => `${i + 1}. ${d.name || 'Detachment ' + (i + 1)}`).join('\n');
+            const selection = prompt(`Multiple detachments found. Enter the number:\n\n${detachmentNames}\n\n(or Cancel to abort)`);
+            
+            if (!selection) return null;
+            
+            const index = parseInt(selection) - 1;
+            if (index >= 0 && index < detachments.length) {
+                return detachments[index];
+            }
+            
+            alert('Invalid selection. Please try again.');
+            return promptDetachmentSelection(detachments);
         }
     </script>
 </body>
