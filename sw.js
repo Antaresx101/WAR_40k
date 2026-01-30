@@ -19,7 +19,7 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve from cache or network
+// Fetch event - serve from cache + network
 self.addEventListener('fetch', (event) => {
   event.respondWith(
     caches.match(event.request)
