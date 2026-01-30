@@ -1137,10 +1137,16 @@
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
                     <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="display: none;">
-                        ✚
+                        &#10010;
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App" style="display: none;">
+                        📱
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App">
+                        🔄
                     </button>
                     <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
-                        🌙
+                        &#127763;
                     </button>
                 </div>
             </div>
@@ -1149,6 +1155,7 @@
         <!-- Install Prompt -->
         <div class="install-prompt hidden" id="install-prompt">
             <div>
+                <strong>&#128241; Install App</strong>
                 <strong>📱 Install App</strong>
                 <p>Add to home screen for quick access!</p>
             </div>
@@ -1173,8 +1180,9 @@
             <div id="welcome-screen" class="welcome-screen">
                 <div class="sort-controls" style="margin-bottom: 20px; text-align: left;">
                     <button class="filter-btn" onclick="sortLists('name')" data-sort="name">Name</button>
-                    <button class="filter-btn" onclick="sortLists('date')" data-sort="date">Date</button>
+                    <button class="filter-btn" onclick="sortLists('faction')" data-sort="faction">Faction</button>
                     <button class="filter-btn" onclick="sortLists('points')" data-sort="points">Points</button>
+                    <button class="filter-btn" onclick="sortLists('date')" data-sort="date">Date</button>
                 </div>
                 <div class="saved-lists" id="saved-lists-container">
                     <!-- Saved lists will be inserted here -->
@@ -1289,7 +1297,7 @@
     </div>
 
     <script>
-        // ==================== APP STATE ====================
+        // App state and global variables
         const AppState = {
             currentList: null,
             currentListId: null,
@@ -1299,7 +1307,7 @@
             appVersion: '2.0.0' // Changelog
         };
 
-        // ==================== INITIALIZATION ====================
+        // Initialize the app when page loads
         document.addEventListener('DOMContentLoaded', () => {
             initializeApp();
         });
@@ -1320,7 +1328,7 @@
         }    
         updateAppVersion();
 
-        // ==================== SERVICE WORKER ====================
+        // Service worker for PWA functionality
         let newWorker;
         
         function registerServiceWorker() {
@@ -1363,16 +1371,17 @@
         }
         
         function showUpdateBanner() {
-            const banner = document.getElementById('update-banner');
-            if (banner) {
-                banner.classList.remove('hidden');
+            // Show update button in header instead of banner
+            const updateBtn = document.getElementById('update-btn');
+            if (updateBtn) {
+                updateBtn.style.display = 'block';
             }
         }
         
         function hideUpdateBanner() {
-            const banner = document.getElementById('update-banner');
-            if (banner) {
-                banner.classList.add('hidden');
+            const updateBtn = document.getElementById('update-btn');
+            if (updateBtn) {
+                updateBtn.style.display = 'none';
             }
         }
         
@@ -1389,33 +1398,58 @@
             }
         });
 
-        // ==================== INSTALL PROMPT ====================
+        // App install prompt for PWA
         function setupInstallPrompt() {
+            // Check if app is already installed (running as PWA)
+            const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
+                               window.matchMedia('(display-mode: minimal-ui)').matches ||
+                               document.referrer.includes('android-app://');
+            
+            console.log('Is app installed?', isInstalled);
+            
+            // Show install button by default if not installed and browser supports PWA
+            const installBtn = document.getElementById('install-btn');
+            if (!isInstalled && 'serviceWorker' in navigator && 'beforeinstallprompt' in window) {
+                console.log('Showing install button by default');
+                if (installBtn) {
+                    installBtn.style.display = 'block';
+                }
+            }
+            
+            // Listen for install prompt
             window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt event fired');
                 e.preventDefault();
                 AppState.deferredPrompt = e;
                 
-                // Delay showing the prompt to avoid immediate overlap
-                setTimeout(() => {
-                    document.getElementById('install-prompt').classList.remove('hidden');
-                }, 2000); // Wait 2 seconds before showing
-            });
-
-            document.getElementById('install-btn').addEventListener('click', async () => {
-                if (AppState.deferredPrompt) {
-                    AppState.deferredPrompt.prompt();
-                    const { outcome } = await AppState.deferredPrompt.userChoice;
-                    AppState.deferredPrompt = null;
-                    document.getElementById('install-prompt').classList.add('hidden');
+                // Show install button in header
+                if (installBtn) {
+                    installBtn.style.display = 'block';
                 }
             });
 
-            document.getElementById('dismiss-install').addEventListener('click', () => {
-                document.getElementById('install-prompt').classList.add('hidden');
-            });
+            // Handle install button click
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    console.log('Install button clicked, deferredPrompt:', AppState.deferredPrompt);
+                    if (AppState.deferredPrompt) {
+                        AppState.deferredPrompt.prompt();
+                        const { outcome } = await AppState.deferredPrompt.userChoice;
+                        console.log('Install outcome:', outcome);
+                        if (outcome === 'accepted') {
+                            console.log('App was installed');
+                            installBtn.style.display = 'none';
+                        }
+                        AppState.deferredPrompt = null;
+                    } else {
+                        console.log('No install prompt available');
+                        // Could show a message here that installation isn't available
+                    }
+                });
+            }
         }
 
-        // ==================== EVENT LISTENERS ====================
+        // Set up all event listeners
         function setupEventListeners() {
             // Dark mode toggle
             document.getElementById('dark-mode-btn').addEventListener('click', toggleDarkMode);
@@ -1449,7 +1483,7 @@
             });
         }
 
-        // ==================== DARK MODE ====================
+        // Dark mode functionality
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
             AppState.isDarkMode = document.body.classList.contains('dark-mode');
@@ -1468,7 +1502,7 @@
             }
         }
 
-        // ==================== FILE HANDLING ====================
+        // File upload and processing
         async function handleFileUpload(file) {
             try {
                 console.log('Starting file upload for:', file.name);
@@ -1501,7 +1535,7 @@
             }
         }
 
-        // ==================== JSON PARSER ====================
+        // Parse army list JSON data
         function parseNewRecruitJSON(data) {
             console.log('Starting JSON parsing...');
             const roster = data.roster || {};
@@ -1654,7 +1688,7 @@
             return enemyKeywords.some(kw => desc.includes(kw));
         }
 
-        // ==================== CATEGORIZATION ====================
+        // Sort abilities by game phase
         function categorizeAbilities(abilities) {
             console.log('Categorizing', abilities.length, 'abilities');
             
@@ -1731,7 +1765,7 @@
             return phases;
         }
 
-        // ==================== SMOOTH SCROLL WITH OFFSET ====================
+        // Smooth scrolling for navigation
         function setupSmoothScroll() {
             // Calculate the sticky bar height (approx 48px for action bar + 8px padding)
             const stickyOffset = 56;
@@ -1753,7 +1787,7 @@
             });
         }
 
-        // ==================== RENDERING ====================
+        // Render the main army view
         function renderArmyView() {
             console.log('Rendering army view...');
             const armyView = document.getElementById('army-view');
@@ -1982,7 +2016,7 @@
             setupDragAndDrop();
         }
 
-        // ==================== EXCLUSION FILTER ====================
+        // Filter out excluded abilities
         function applyExclusionFilter() {
             const exclusionText = AppState.currentList.exclusions || '';
             const exclusionTerms = exclusionText.split('\n')
@@ -2035,7 +2069,7 @@
             ability.style.display = 'block';
         }
 
-        // ==================== SEARCH & FILTER ====================
+        // Search and filter abilities
         function handleSearch(e) {
             document.querySelectorAll('.ability').forEach(ability => {
                 applyCurrentFilters(ability);
@@ -2051,7 +2085,7 @@
             });
         }
 
-        // ==================== DRAG AND DROP ====================
+        // Drag and drop functionality
         function setupDragAndDrop() {
             document.querySelectorAll('.ability').forEach(ability => {
                 ability.addEventListener('dragstart', handleDragStart);
@@ -2124,7 +2158,7 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
 
-        // ==================== ABILITY ACTIONS ====================
+        // Ability editing and actions
         function toggleEnemyColor(abilityId) {
             const element = document.querySelector(`[data-ability-id="${abilityId}"]`);
             element.classList.toggle('enemy');
@@ -2322,7 +2356,7 @@
             closeModal('add-ability-modal');
         }
 
-        // ==================== STORAGE ====================
+        // Save and load army lists
         function saveCurrentList() {
             if (!AppState.currentList) {
                 alert('No list to save');
@@ -2431,6 +2465,23 @@
                         return nameA.localeCompare(nameB);
                     });
                     break;
+                case 'faction':
+                    listsArray.sort((a, b) => {
+                        const factionA = a[1].faction || '';
+                        const factionB = b[1].faction || '';
+                        const detachmentA = a[1].detachment || '';
+                        const detachmentB = b[1].detachment || '';
+                        
+                        // Sort by faction first
+                        const factionCompare = factionA.localeCompare(factionB);
+                        if (factionCompare !== 0) {
+                            return factionCompare;
+                        }
+                        
+                        // If factions are equal, sort by detachment
+                        return detachmentA.localeCompare(detachmentB);
+                    });
+                    break;
                 case 'date':
                     listsArray.sort((a, b) => new Date(b[1].lastModified) - new Date(a[1].lastModified));
                     break;
@@ -2452,7 +2503,7 @@
                     <div class="list-card" onclick="loadList('${id}')">
                         <div class="list-info">
                             <h4>${list.name}</h4>
-                            <p>${list.faction} • ${list.points}pts • ${new Date(list.lastModified).toLocaleDateString()} - ${new Date(list.lastModified).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
+                            <p>${list.faction}${list.detachment ? ' • ' + list.detachment : ''} • ${list.points}pts • ${new Date(list.lastModified).toLocaleDateString()} - ${new Date(list.lastModified).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
                         </div>
                         <div class="list-actions">
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); loadList('${id}')">
@@ -2548,7 +2599,7 @@
             showUploadScreen();
         }
 
-        // ==================== NOTES & EXCLUSION PARSING ====================
+        // Handle notes and exclusions
         function parseNotesAndExclusions(content) {
             const separator = '---';
             const parts = content.split(separator);
@@ -2583,7 +2634,7 @@
             return `${notesText}\n\n---\nExclude abilities (one per line):\n${exclusionText}`;
         }
 
-        // ==================== UI STATE MANAGEMENT ====================
+        // UI state management
         function updateAddListButtonVisibility() {
             const addListBtn = document.getElementById('add-list-btn');
             const welcomeScreen = document.getElementById('welcome-screen');
@@ -2601,7 +2652,7 @@
             }
         }
 
-        // ==================== NAVIGATION ====================
+        // Navigation functions
         
         function showUploadScreen() {
             document.getElementById('welcome-screen').style.display = 'block';
@@ -2676,7 +2727,7 @@
             }
         }
 
-        // ==================== MODAL HELPERS ====================
+        // Modal helpers
         function openModal(modalId) {
             document.getElementById(modalId).classList.add('active');
         }
@@ -2694,7 +2745,7 @@
             });
         });
 
-        // ==================== UTILITIES ====================
+        // Utility functions
         function generateId() {
             return Date.now().toString(36) + Math.random().toString(36).substr(2);
         }
