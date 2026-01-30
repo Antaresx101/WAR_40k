@@ -114,7 +114,14 @@
             letter-spacing: -0.5px;
             text-transform: uppercase;
         }
-        
+
+        body.dark-mode .app-title {
+            background: linear-gradient(135deg, var(--menu-dark) 0%, var(--menu) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
         .header-actions {
             display: flex;
             align-items: center;
@@ -897,6 +904,83 @@
             border-color: var(--accent);
         }
 
+        /* Override system dark mode preferences to ensure app's light mode is truly light */
+        @media (prefers-color-scheme: dark) {
+            /* Force light mode colors when app is NOT in dark mode */
+            body:not(.dark-mode) {
+                background: linear-gradient(135deg, var(--bg-light) 0%, var(--bg-light-alt) 100%) !important;
+                color: var(--text-light) !important;
+            }
+            
+            body:not(.dark-mode) .header {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .content {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .btn-secondary {
+                background: var(--bg-light-alt) !important;
+                color: var(--text-light) !important;
+            }
+            
+            body:not(.dark-mode) .list-card {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .army-header {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .controls-bar {
+                background: var(--bg-light-alt) !important;
+            }
+            
+            body:not(.dark-mode) .search-box {
+                background: var(--bg-light) !important;
+                color: var(--text-light) !important;
+                border-color: var(--border-light) !important;
+            }
+            
+            body:not(.dark-mode) .filter-btn {
+                background: var(--bg-light) !important;
+                border-color: var(--border-light) !important;
+                color: var(--text-light) !important;
+            }
+            
+            body:not(.dark-mode) .phase-section {
+                background: var(--bg-light-alt) !important;
+            }
+            
+            body:not(.dark-mode) .ability {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .ability-controls button {
+                background: var(--bg-light-alt) !important;
+            }
+            
+            body:not(.dark-mode) .modal-content {
+                background: var(--bg-light) !important;
+            }
+            
+            body:not(.dark-mode) .form-group input,
+            body:not(.dark-mode) .form-group textarea,
+            body:not(.dark-mode) .form-group select {
+                background: var(--bg-light) !important;
+                color: var(--text-light) !important;
+                border-color: var(--border-light) !important;
+            }
+            
+            body:not(.dark-mode) .notes-textarea,
+            body:not(.dark-mode) .exclusion-textarea {
+                background: var(--bg-light) !important;
+                color: var(--text-light) !important;
+                border-color: var(--border-light) !important;
+            }
+        }
+
         /* ==================== RESPONSIVE ==================== */
         @media (max-width: 768px) {
             .header-content {
@@ -1145,16 +1229,16 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1 class="app-title">WH 40k</h1>
+                <h1 class="app-title">WAR 40k</h1>
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
-                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List">
-                        ✚
+                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="font-size: 1rem;">
+                        ✛
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-size: 1rem; padding-bottom: 6.5px">
+                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-weight: 300; font-size: 1.2rem;">
                         ⤓
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App" style="font-size: 0.9rem; padding-bottom: 6.5px">
+                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App" style="font-size: 0.9rem; padding-bottom: 5px;">
                         ⟳
                     </button>
                     <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
