@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Warhammer 40k Ability Reference - Organize and manage your army abilities">
+    <meta name="description" content="Warhammer Ability Reference - 40k : Organize and manage your army abilities">
     <meta name="theme-color" content="#667eea">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="WH40k Reference">
+    <meta name="apple-mobile-web-app-title" content="WAR_40k">
     
-    <title>Warhammer 40k Ability Reference</title>
+    <title>Warhammer Ability Reference - 40k</title>
     
     <link rel="manifest" href="./manifest.json">
     <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
@@ -83,7 +83,7 @@
         .header {
             background: white;
             box-shadow: var(--shadow);
-            padding: 15px 20px;
+            padding: 5px 15px;
         }
         
         body.dark-mode .header {
@@ -98,8 +98,9 @@
         }
         
         .app-title {
-            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            font-size: clamp(0.8rem, 4vw, 1.2rem);
             font-weight: 700;
+            font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -192,7 +193,7 @@
         /* ==================== WELCOME SCREEN ==================== */
         .welcome-screen {
             text-align: center;
-            padding: 40px 20px;
+            padding: 10px 20px;
         }
         
         .welcome-screen h2 {
@@ -291,6 +292,7 @@
         
         .list-info h4 {
             margin-bottom: 5px;
+            text-align: left;
             color: var(--primary);
         }
 
@@ -300,6 +302,7 @@
 
         .list-info p {
             font-size: 0.9rem;
+            text-align: left;
             color: var(--text-light-secondary);
         }
         
@@ -890,7 +893,7 @@
             }
             
             .app-title {
-                font-size: 1rem;
+                font-size: 0.8rem;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -1130,7 +1133,7 @@
         <!-- Header -->
         <header class="header">
             <div class="header-content">
-                <h1 class="app-title">Warhammer Ability Reference</h1>
+                <h1 class="app-title">Warhammer Ability Reference - 40k</h1>
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
                     <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="display: none;">
@@ -1168,6 +1171,11 @@
         <main class="content" id="main-content">
             <!-- Welcome Screen -->
             <div id="welcome-screen" class="welcome-screen">
+                <div class="sort-controls" style="margin-bottom: 20px; text-align: left;">
+                    <button class="filter-btn" onclick="sortLists('name')" data-sort="name">Name</button>
+                    <button class="filter-btn" onclick="sortLists('date')" data-sort="date">Date</button>
+                    <button class="filter-btn" onclick="sortLists('points')" data-sort="points">Points</button>
+                </div>
                 <div class="saved-lists" id="saved-lists-container">
                     <!-- Saved lists will be inserted here -->
                 </div>
@@ -1303,8 +1311,14 @@
             registerServiceWorker();
             setupInstallPrompt();
             updateAddListButtonVisibility();
-            updateAppVersion();
-        }
+            
+            // Set default sort button state
+            const defaultSortBtn = document.querySelector('[data-sort="name"]');
+            if (defaultSortBtn) {
+                defaultSortBtn.classList.add('active');
+            }
+        }    
+        updateAppVersion();
 
         // ==================== SERVICE WORKER ====================
         let newWorker;
@@ -1417,6 +1431,8 @@
                 const file = e.target.files[0];
                 if (file) {
                     handleFileUpload(file);
+                    // Clear the file input so the same file can be selected again
+                    e.target.value = '';
                 }
             });
 
@@ -1468,11 +1484,12 @@
                     AppState.currentList = parsedList;
                     AppState.currentListId = parsedList.id; // Use the ID generated during parsing
                     
-                    // Save immediately after upload
+                    // Render the view first to create DOM elements
+                    renderArmyView();
+                    
+                    // Save after rendering so DOM elements exist
                     saveCurrentList();
                     
-                    // Render the view
-                    renderArmyView();
                     console.log('Successfully loaded', parsedList.abilities.length, 'abilities');
                 } else {
                     alert('No abilities found in the uploaded file. Please check the file format.');
@@ -1522,16 +1539,12 @@
         }
 
         function walkSelections(selections, list, currentUnit = '') {
-            console.log('Walking selections for unit:', currentUnit, 'with', selections.length, 'items');
             for (const item of selections) {
                 const name = item.name || '';
                 const group = item.group || '';
-                
-                console.log('Processing item:', name, 'group:', group, 'type:', item.type);
 
                 // Detect detachment
                 if (name.toLowerCase().includes('detachment') || group.toLowerCase().includes('detachment')) {
-                    console.log('Found detachment:', name);
                     for (const sub of item.selections || []) {
                         const detName = sub.name || '';
                         if (detName && detName.toLowerCase() !== 'detachment') {
@@ -1540,7 +1553,7 @@
                         }
                     }
 
-                    // Extract detachment abilities from profiles
+                    // Extract detachment abilities
                     for (const profile of item.profiles || []) {
                         if (profile.typeName === 'Abilities') {
                             const abilityName = profile.name || '';
@@ -1552,7 +1565,6 @@
                                 }
                             }
                             if (abilityName && description) {
-                                console.log('Found detachment ability:', abilityName);
                                 list.abilities.push({
                                     id: generateId(),
                                     unitName: 'DETACHMENT',
@@ -1560,7 +1572,7 @@
                                     description: description,
                                     isDetachment: true,
                                     isStratagem: false,
-                                    isEnemy: checkIfEnemy(description),
+                                    isEnemy: false,
                                     source: 'detachment'
                                 });
                             }
@@ -1572,7 +1584,6 @@
                         const abilityName = rule.name || '';
                         const description = rule.description || '';
                         if (abilityName && description) {
-                            console.log('Found detachment rule:', abilityName);
                             list.abilities.push({
                                 id: generateId(),
                                 unitName: 'DETACHMENT',
@@ -1580,37 +1591,25 @@
                                 description: description,
                                 isDetachment: true,
                                 isStratagem: false,
-                                isEnemy: checkIfEnemy(description),
+                                isEnemy: false,
                                 source: 'detachment'
                             });
                         }
                     }
                 }
-                
-                // Extract unit abilities from multiple sources
-                console.log('Checking item for abilities:', name, 'has profiles:', !!item.profiles, 'has rules:', !!item.rules);
-                
-                // Check profiles for abilities
-                if (item.profiles && Array.isArray(item.profiles)) {
-                    console.log('Found unit with profiles:', name, item.profiles.length, 'profiles');
+                // Extract unit abilities
+                else if (item.profiles) {
                     for (const profile of item.profiles) {
-                        console.log('Profile type:', profile.typeName, 'name:', profile.name);
-                        if (profile.typeName === 'Abilities' || profile.typeName === 'Ability') {
+                        if (profile.typeName === 'Abilities') {
                             const abilityName = profile.name || '';
                             let description = '';
-                            
-                            // Try multiple description sources
-                            if (profile.characteristics && Array.isArray(profile.characteristics)) {
-                                for (const char of profile.characteristics) {
-                                    if (char.name === 'Description' || char.name === 'description') {
-                                        description = char.$text || char.text || char.description || '';
-                                        break;
-                                    }
+                            for (const char of profile.characteristics || []) {
+                                if (char.name === 'Description') {
+                                    description = char.$text || '';
+                                    break;
                                 }
                             }
-                            
                             if (abilityName && description) {
-                                console.log('Found unit ability from profiles:', abilityName, 'for unit:', currentUnit || name);
                                 list.abilities.push({
                                     id: generateId(),
                                     unitName: currentUnit || name,
@@ -1619,38 +1618,15 @@
                                     isDetachment: false,
                                     isStratagem: false,
                                     isEnemy: checkIfEnemy(description),
-                                    source: 'unit-profile'
+                                    source: 'unit'
                                 });
                             }
                         }
                     }
                 }
-                
-                // Check rules for abilities
-                if (item.rules && Array.isArray(item.rules)) {
-                    console.log('Found unit with rules:', name, item.rules.length, 'rules');
-                    for (const rule of item.rules) {
-                        const abilityName = rule.name || '';
-                        const description = rule.description || rule.desc || '';
-                        
-                        if (abilityName && description) {
-                            console.log('Found unit ability from rules:', abilityName, 'for unit:', currentUnit || name);
-                            list.abilities.push({
-                                id: generateId(),
-                                unitName: currentUnit || name,
-                                abilityName: abilityName,
-                                description: description,
-                                isDetachment: false,
-                                isStratagem: false,
-                                isEnemy: checkIfEnemy(description),
-                                source: 'unit-rule'
-                            });
-                        }
-                    }
-                }
 
                 // Recurse
-                if (item.selections && Array.isArray(item.selections)) {
+                if (item.selections) {
                     walkSelections(item.selections, list, currentUnit || name);
                 }
             }
@@ -1680,6 +1656,8 @@
 
         // ==================== CATEGORIZATION ====================
         function categorizeAbilities(abilities) {
+            console.log('Categorizing', abilities.length, 'abilities');
+            
             const phases = {
                 'DEPLOYMENT / RESERVES': [],
                 'COMMAND PHASE': [],
@@ -1724,6 +1702,7 @@
 
             for (const ability of abilities) {
                 const desc = ability.description.toLowerCase().replace(/[´']/g, '');
+                console.log(`Processing ability: ${ability.abilityName} - Description: ${desc.substring(0, 100)}...`);
                 let found = false;
 
                 for (const [phase, keywords] of Object.entries(phaseKeywords)) {
@@ -1732,8 +1711,11 @@
                     const hasInclude = keywords.include.some(kw => desc.includes(kw));
                     const hasExclude = keywords.exclude.some(kw => desc.includes(kw));
 
+                    console.log(`  Phase ${phase}: include=${hasInclude}, exclude=${hasExclude}`);
+
                     if (hasInclude && !hasExclude) {
                         phases[phase].push(ability);
+                        console.log(`  -> Assigned to ${phase}`);
                         found = true;
                         break;
                     }
@@ -1741,9 +1723,11 @@
 
                 if (!found) {
                     phases['OTHER'].push(ability);
+                    console.log(`  -> Assigned to OTHER`);
                 }
             }
 
+            console.log('Final categorization:', Object.keys(phases).map(phase => `${phase}: ${phases[phase].length}`));
             return phases;
         }
 
@@ -1816,9 +1800,9 @@
                     <input type="text" class="search-box" id="search-box" placeholder="Search abilities...">
                     <div class="filter-buttons">
                         <button class="filter-btn active" data-filter="all">All</button>
-                        <button class="filter-btn" data-filter="stratagem">Stratagems</button>
                         <button class="filter-btn" data-filter="detachment">Detachment</button>
-                        <button class="filter-btn" data-filter="enemy">Enemy Triggered</button>
+                        <button class="filter-btn" data-filter="stratagem">Stratagems</button>
+                        <button class="filter-btn" data-filter="enemy">Reactions</button>
                     </div>
                 </div>
 
@@ -1838,10 +1822,30 @@
             setupSmoothScroll();
             updateAddListButtonVisibility();
             applyExclusionFilter();
+            
+            // Reset filter to "All" and clear search after DOM is ready
+            setTimeout(() => {
+                const allFilterBtn = document.querySelector('[data-filter="all"]');
+                if (allFilterBtn) {
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    allFilterBtn.classList.add('active');
+                }
+                
+                const searchBox = document.getElementById('search-box');
+                if (searchBox) {
+                    searchBox.value = '';
+                }
+                
+                // Apply the reset filters to show all abilities
+                document.querySelectorAll('.ability').forEach(ability => {
+                    ability.style.display = 'block';
+                });
+            }, 100);
         }
 
         function renderPhases(categorized) {
             console.log('Rendering phases with categorized data:', categorized);
+            console.log('Available phases:', Object.keys(categorized || {}));
             let html = '';
             
             const phaseIds = {
@@ -1855,14 +1859,26 @@
                 'OTHER': 'phase-other'
             };
 
-            for (const [phase, abilities] of Object.entries(categorized)) {
+            // Ensure all phases exist even if empty
+            const allPhases = ['DEPLOYMENT / RESERVES', 'COMMAND PHASE', 'MOVEMENT PHASE', 'SHOOTING PHASE', 'CHARGE PHASE', 'FIGHT PHASE', 'ANY PHASE', 'OTHER'];
+            
+            for (const phase of allPhases) {
+                const abilities = categorized[phase] || [];
                 console.log(`Phase ${phase} has ${abilities.length} abilities`);
+                
+                if (abilities.length > 0) {
+                    console.log(`  Abilities in ${phase}:`, abilities.map(a => a.abilityName));
+                }
+                
                 const phaseId = phaseIds[phase] || 'phase-other';
+                
+                const abilitiesHTML = abilities.map(ability => renderAbility(ability)).join('');
+                console.log(`Generated abilities HTML for ${phase}:`, abilitiesHTML.substring(0, 200) + '...');
                 
                 html += `
                     <div class="phase-section" data-phase="${phase}" id="${phaseId}">
                         <h3>${phase}</h3>
-                        ${abilities.map(ability => renderAbility(ability)).join('')}
+                        ${abilitiesHTML}
                     </div>
                 `;
             }
@@ -1872,6 +1888,8 @@
         }
 
         function renderAbility(ability) {
+            console.log('Rendering ability:', ability.abilityName, 'for unit:', ability.unitName);
+            
             const classes = ['ability'];
             if (ability.isEnemy) classes.push('enemy');
             if (ability.isStratagem) classes.push('stratagem');
@@ -1885,7 +1903,7 @@
                 ? `<div class="ability-keywords">Keywords: ${keywords.join(', ')}</div>`
                 : '';
 
-            return `
+            const html = `
                 <div class="${classes.join(' ')}" data-ability-id="${ability.id}" draggable="true">
                     <div class="ability-controls">
                         <button class="color-btn" onclick="toggleEnemyColor('${ability.id}')" title="Toggle color">🎨</button>
@@ -1899,6 +1917,9 @@
                     ${keywordsHTML}
                 </div>
             `;
+            
+            console.log('Generated HTML for ability:', html.substring(0, 200) + '...');
+            return html;
         }
         
         function extractKeywords(text) {
@@ -1912,8 +1933,11 @@
         }
 
         function formatDescription(text) {
-            // Bold keywords
-            text = text.replace(/\*\*\^\^(.*?)\^\^\*\*|\*\*(.*?)\*\*/g, (m, g1, g2) => `<strong>${g1 || g2}</strong>`);
+            // Remove all ^^ characters
+            text = text.replace(/\^\^/g, '');
+            // Handle regular **text** pattern
+            text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            // Bold all-caps keywords
             text = text.replace(/\b([A-Z]{2,})\b/g, '<strong>$1</strong>');
             return text;
         }
@@ -2277,12 +2301,16 @@
                 source: 'custom'
             };
 
+            // Add to the main abilities list
             AppState.currentList.abilities.push(ability);
             
-            // Re-categorize to ensure proper placement
-            AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+            // Add directly to the selected phase at the top (unshift adds to beginning)
+            if (!AppState.currentList.categorized[phase]) {
+                AppState.currentList.categorized[phase] = [];
+            }
+            AppState.currentList.categorized[phase].unshift(ability);
             
-            // Re-render to show the new ability in the correct phase
+            // Re-render to show the new ability at the top of the selected phase
             renderArmyView();
 
             // Clear form
@@ -2340,6 +2368,20 @@
             }
         }
 
+        let currentSortMethod = 'name'; // Default sort by name
+
+        function sortLists(sortMethod) {
+            currentSortMethod = sortMethod;
+            
+            // Update button states
+            document.querySelectorAll('.sort-controls .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-sort="${sortMethod}"]`).classList.add('active');
+            
+            loadSavedLists();
+        }
+
         function getSavedLists() {
             const saved = localStorage.getItem('savedLists');
             return saved ? JSON.parse(saved) : {};
@@ -2358,12 +2400,59 @@
                 return;
             }
 
+            // Convert to array and sort
+            let listsArray = Object.entries(savedLists);
+            
+            switch (currentSortMethod) {
+                case 'name':
+                    listsArray.sort((a, b) => {
+                        // Natural sorting that handles numbers properly
+                        const nameA = a[1].name;
+                        const nameB = b[1].name;
+                        
+                        // Extract numbers from the beginning for proper numerical sorting
+                        const numA = parseInt(nameA.match(/^\d+/)?.[0] || '0');
+                        const numB = parseInt(nameB.match(/^\d+/)?.[0] || '0');
+                        
+                        // If both start with numbers, sort numerically first
+                        if (numA > 0 && numB > 0) {
+                            if (numA !== numB) {
+                                return numA - numB;
+                            }
+                            // If numbers are equal, sort alphabetically
+                            return nameA.localeCompare(nameB);
+                        }
+                        
+                        // If only one starts with a number, the numbered one comes first
+                        if (numA > 0) return -1;
+                        if (numB > 0) return 1;
+                        
+                        // Otherwise, sort alphabetically
+                        return nameA.localeCompare(nameB);
+                    });
+                    break;
+                case 'date':
+                    listsArray.sort((a, b) => new Date(b[1].lastModified) - new Date(a[1].lastModified));
+                    break;
+                case 'points':
+                    listsArray.sort((a, b) => {
+                        const pointsA = parseInt(a[1].points) || 0;
+                        const pointsB = parseInt(b[1].points) || 0;
+                        if (pointsA !== pointsB) {
+                            return pointsA - pointsB; // Lower points first
+                        }
+                        // If points are equal, sort by name
+                        return a[1].name.localeCompare(b[1].name);
+                    });
+                    break;
+            }
+
             container.innerHTML = `
-                ${Object.entries(savedLists).map(([id, list]) => `
+                ${listsArray.map(([id, list]) => `
                     <div class="list-card" onclick="loadList('${id}')">
                         <div class="list-info">
                             <h4>${list.name}</h4>
-                            <p>${list.faction} • ${list.points}pts • ${new Date(list.lastModified).toLocaleDateString()}</p>
+                            <p>${list.faction} • ${list.points}pts • ${new Date(list.lastModified).toLocaleDateString()} - ${new Date(list.lastModified).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', hour12: false })}</p>
                         </div>
                         <div class="list-actions">
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); loadList('${id}')">
@@ -2420,8 +2509,8 @@
             }
         }
 
-        function deleteSavedList(listId) {
-            if (!confirm('Delete this saved list?')) return;
+        function deleteSavedList(listId, skipConfirmation = false) {
+            if (!skipConfirmation && !confirm('Delete this saved list?')) return;
 
             const savedLists = getSavedLists();
             delete savedLists[listId];
@@ -2455,7 +2544,7 @@
             
             if (!confirm('Delete current list? This cannot be undone.')) return;
 
-            deleteSavedList(AppState.currentListId);
+            deleteSavedList(AppState.currentListId, true); // Skip confirmation since we already asked
             showUploadScreen();
         }
 
@@ -2565,8 +2654,7 @@
             try {
                 // Note: Actual fetch would require CORS proxy or backend
                 // This is a placeholder for the structure
-                alert('Note: Stratagem fetching from Wahapedia requires a CORS proxy or backend service. ' +
-                      'For now, you can manually add stratagems using "Add Custom Ability" and marking them as stratagems.');
+                alert('Note: Feature currently not implemented.');
                 
                 statusDiv.innerHTML = '⚠️ Manual entry required (see alert)';
                 statusDiv.style.color = 'var(--warning)';
