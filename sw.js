@@ -19,8 +19,16 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Fetch event - serve from cache + network
+// Fetch event - serve from cache + network (but skip external scripts)
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip caching external scripts and analytics
+  if (url.origin !== self.location.origin || url.pathname.includes('count.js')) {
+    // Let external requests go directly to network
+    return;
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
