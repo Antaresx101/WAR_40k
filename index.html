@@ -1222,6 +1222,33 @@
         .update-banner button:hover {
             background: rgba(255, 255, 255, 0.9);
         }
+        
+        /* Update button styling when update is available */
+        .btn.update-available {
+            background: var(--warning) !important;
+            color: white !important;
+            border-color: var(--warning) !important;
+            animation: pulse-update 2s infinite;
+            box-shadow: 0 0 10px rgba(237, 137, 54, 0.5);
+        }
+        
+        .btn.update-available:hover {
+            background: #dd7a24 !important;
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(237, 137, 54, 0.7);
+        }
+        
+        @keyframes pulse-update {
+            0% {
+                box-shadow: 0 0 10px rgba(237, 137, 54, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 20px rgba(237, 137, 54, 0.8);
+            }
+            100% {
+                box-shadow: 0 0 10px rgba(237, 137, 54, 0.5);
+            }
+        }
     </style>
 </head>
 <body>
@@ -1486,10 +1513,12 @@
         }
         
         function showUpdateBanner() {
-            // Show update button in header instead of banner
+            // Show update button in header with visual indication
             const updateBtn = document.getElementById('update-btn');
             if (updateBtn) {
                 updateBtn.style.display = 'block';
+                updateBtn.classList.add('update-available');
+                console.log('Update available - button highlighted');
             }
         }
         
@@ -1497,6 +1526,8 @@
             const updateBtn = document.getElementById('update-btn');
             if (updateBtn) {
                 updateBtn.style.display = 'none';
+                updateBtn.classList.remove('update-available');
+                console.log('Update banner hidden');
             }
         }
         
@@ -1521,14 +1552,28 @@
                                document.referrer.includes('android-app://');
             
             console.log('Is app installed?', isInstalled);
+            console.log('Service Worker support:', 'serviceWorker' in navigator);
+            console.log('Install prompt support:', 'beforeinstallprompt' in window);
             
-            // Show install button by default if not installed and browser supports PWA
+            // Hide install button by default initially
             const installBtn = document.getElementById('install-btn');
+            if (installBtn) {
+                installBtn.style.display = 'none';
+                console.log('Install button hidden by default');
+            }
+            
+            // Show install button if not installed and browser supports PWA
             if (!isInstalled && 'serviceWorker' in navigator && 'beforeinstallprompt' in window) {
-                console.log('Showing install button by default');
+                console.log('Browser supports PWA install, showing install button');
                 if (installBtn) {
                     installBtn.style.display = 'block';
                 }
+            } else {
+                console.log('PWA install not available:', {
+                    isInstalled,
+                    hasServiceWorker: 'serviceWorker' in navigator,
+                    hasInstallPrompt: 'beforeinstallprompt' in window
+                });
             }
             
             // Listen for install prompt
@@ -1540,6 +1585,7 @@
                 // Show install button in header
                 if (installBtn) {
                     installBtn.style.display = 'block';
+                    console.log('Install button shown due to beforeinstallprompt event');
                 }
             });
 
@@ -1558,7 +1604,7 @@
                         AppState.deferredPrompt = null;
                     } else {
                         console.log('No install prompt available');
-                        // Installation isnt available
+                        alert('App installation is not available in this browser. Try using Chrome, Edge, or Firefox on desktop/mobile.');
                     }
                 });
             }
