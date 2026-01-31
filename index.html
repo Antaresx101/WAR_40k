@@ -1607,21 +1607,20 @@
             
             // Always hide install button initially - only show when event fires
             installBtn.style.display = 'none';
-            console.log('Install button hidden by default');
             
-            // If already installed, don't bother with install prompt
+            // If already installed, no install prompt
             if (isInstalled) {
                 console.log('App is already installed');
                 return;
             }
             
-            // Listen for install prompt - this is the ONLY way to know install is available
+            // Listen for install prompt
             window.addEventListener('beforeinstallprompt', (e) => {
                 console.log('beforeinstallprompt event fired - install is available!');
                 e.preventDefault();
                 AppState.deferredPrompt = e;
                 
-                // Show install button NOW that we know install is available
+                // Show install button
                 installBtn.style.display = 'block';
             });
 
