@@ -1259,9 +1259,6 @@
             }
         }
     </style>
-    <!-- Analytics -->
-    <script data-goatcounter="https://antaresx101.goatcounter.com/count"
-            async src="https://gc.zgo.at/count.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -1473,7 +1470,7 @@
             isDarkMode: false,
             deferredPrompt: null,
             draggedElement: null,
-            appVersion: '2.0.1' // Changelog
+            appVersion: '2.0.0' // Changelog
         };
 
         // Initialize the app when page loads
@@ -1562,9 +1559,31 @@
             const updateBtn = document.getElementById('update-btn');
             if (updateBtn) {
                 updateBtn.addEventListener('click', () => {
+                    console.log('Update button clicked');
                     if (newWorker) {
-                        // Tell the waiting worker to skip waiting and activate
+                        console.log('Activating waiting service worker...');
                         newWorker.postMessage({ type: 'SKIP_WAITING' });
+                    } else {
+                        // Check for updates manually
+                        console.log('No waiting worker, checking for updates...');
+                        if ('serviceWorker' in navigator) {
+                            navigator.serviceWorker.getRegistration().then(reg => {
+                                if (reg) {
+                                    reg.update().then(() => {
+                                        console.log('Manual update check completed');
+                                        // Show user feedback
+                                        const originalText = updateBtn.innerHTML;
+                                        updateBtn.innerHTML = 'Checking...';
+                                        setTimeout(() => {
+                                            updateBtn.innerHTML = originalText;
+                                            if (!newWorker) {
+                                                alert('No updates available. You have the latest version.');
+                                            }
+                                        }, 2000);
+                                    });
+                                }
+                            });
+                        }
                     }
                 });
             }
