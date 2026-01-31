@@ -2069,8 +2069,12 @@
             const matches = text.match(/\b[A-Z]{2,}\b/g);
             if (!matches) return [];
             
+            // Filter out stratagem formatting prefixes and common non-keywords
+            const excludeWords = ['WHEN', 'TARGET', 'EFFECT', 'RESTRICTIONS', 'CP', 'PHASE'];
+            const filtered = matches.filter(word => !excludeWords.includes(word));
+            
             // Remove duplicates and sort
-            const unique = [...new Set(matches)];
+            const unique = [...new Set(filtered)];
             return unique.sort();
         }
 
@@ -2881,19 +2885,63 @@
         };
 
 
-        function getCoreStratagems() {
-            return [
-                {name: 'Command Re-roll', cp: '1CP', when: 'Any Phase', description: 'Use this Stratagem after you have made a Hit roll, a Wound roll, a Damage roll, a saving throw, an Advance roll, a Charge roll, a Desperate Escape test, a Hazardous test, or after you have rolled the dice to determine the number of attacks made with a weapon. Re-roll that roll, test or saving throw.'},
-                {name: 'Counter-Offensive', cp: '2CP', when: 'Fight Phase', description: 'Use this Stratagem after an enemy unit has fought in this turn. Select one of your own eligible units and fight with it next.'},
-                {name: 'Epic Challenge', cp: '1CP', when: 'Fight Phase', description: 'Use this Stratagem at the start of the Fight phase. Select one CHARACTER model from your army and one enemy CHARACTER model. Those models must make an Epic Challenge roll-off. Both players roll one D6 and add their model\'s Leadership characteristic to the result. If one model\'s roll is higher, until the end of the phase, add 1 to Hit rolls and Wound rolls made for that model, and subtract 1 from Hit rolls and Wound rolls made for the other model.'},
-                {name: 'Fire Overwatch', cp: '1CP', when: 'Charge Phase', description: 'Use this Stratagem when an enemy unit has declared a charge. Select one of your own units that has been targeted by that charge. That unit can fire Overwatch.'},
-                {name: 'Go to Ground', cp: '1CP', when: 'Shooting Phase', description: 'Use this Stratagem in your opponent\'s Shooting phase when an enemy unit targets one of your INFANTRY units (excluding units that are always treated as being in cover). Until the end of the phase, all models in that unit have a 6+ invulnerable save, and they gain the Benefit of Cover.'},
-                {name: 'Heroic Intervention', cp: '2CP', when: 'Charge Phase', description: 'Use this Stratagem at the end of the enemy\'s Charge phase. Select one of your CHARACTER units that is within 6" of an enemy unit and perform a Heroic Intervention with it.'},
-                {name: 'Insane Bravery', cp: '2CP', when: 'Command Phase', description: 'Use this Stratagem at the start of your Command phase. Select one of your units that is Below Half-strength. Until the start of your next Command phase, that unit is no longer Below Half-strength for any rules purposes.'},
-                {name: 'Rapid Ingress', cp: '1CP', when: 'Movement Phase', description: 'Use this Stratagem at the end of your opponent\'s Movement phase. Select one of your units that is in Strategic Reserves. That unit can arrive on the battlefield as if it were the Reinforcements step of your next Movement phase.'},
-                {name: 'Smokescreen', cp: '1CP', when: 'Shooting Phase', description: 'Use this Stratagem in your opponent\'s Shooting phase when one of your SMOKE units has been selected as the target of a shooting attack. Until the end of the phase, all models in that unit have the Benefit of Cover and gain the Stealth ability.'},
-                {name: 'Tank Shock', cp: '1CP', when: 'Charge Phase', description: 'Use this Stratagem in your Charge phase when one of your VEHICLE units ends a Charge move. Select one enemy unit within Engagement Range of that VEHICLE unit and roll one D6 for each model in that unit: for each 6, that enemy unit suffers 1 mortal wound.'}
-            ];
+        async function getCoreStratagems() {
+            try {
+                const url = GITHUB_BASE_URL + 'core.json';
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const coreData = await response.json();
+                const stratagems = [];
+                
+                // Extract stratagems from the core data
+                if (coreData.stratagems && Array.isArray(coreData.stratagems)) {
+                    coreData.stratagems.forEach(item => {
+                        // Format phase array to readable text
+                        let phaseText = 'Any Phase';
+                        if (item.phase && Array.isArray(item.phase)) {
+                            const phaseMap = {
+                                'movement': 'Movement Phase',
+                                'shooting': 'Shooting Phase', 
+                                'fight': 'Fight Phase',
+                                'charge': 'Charge Phase',
+                                'command': 'Command Phase',
+                                'any': 'Any Phase'
+                            };
+                            phaseText = item.phase.map(p => phaseMap[p] || p.charAt(0).toUpperCase() + p.slice(1) + ' Phase').join(', ');
+                        } else if (item.when) {
+                            phaseText = item.when;
+                        }
+                        
+                        // Build formatted description
+                        let formattedDesc = '';
+                        if (item.target) {
+                            formattedDesc += `TARGET: ${item.target}\n\n`;
+                        }
+                        formattedDesc += `EFFECT: ${item.effect}` || `EFFECT: ${item.description}` || '';
+                        if (item.restrictions && item.restrictions.trim()) {
+                            formattedDesc += `\n\nRESTRICTIONS: ${item.restrictions}`;
+                        }
+                        
+                        stratagems.push({
+                            name: item.name || 'Unknown Stratagem',
+                            cp: item.cost ? `${item.cost}CP` : '?CP',
+                            when: phaseText,
+                            description: formattedDesc,
+                            source: 'Core'
+                        });
+                    });
+                }
+                
+                return stratagems;
+            } catch (error) {
+                console.error('Error fetching core stratagems:', error);
+                // Fallback to empty array if fetch fails
+                return [];
+            }
         }
 
         async function fetchAndAddStratagems() {
@@ -2962,6 +3010,9 @@
                                 formattedDesc += `TARGET: ${item.target}\n\n`;
                             }
                             formattedDesc += `EFFECT: ${item.effect}` || `EFFECT: ${item.description}` || '';
+                            if (item.restrictions && item.restrictions.trim()) {
+                                formattedDesc += `\n\nRESTRICTIONS: ${item.restrictions}`;
+                            }
                             
                             stratagems.push({
                                 name: item.name || 'Unknown Stratagem',
@@ -3000,6 +3051,9 @@
                                 formattedDesc += `TARGET: ${item.target}\n\n`;
                             }
                             formattedDesc += `EFFECT: ${item.effect}` || `EFFECT: ${item.description}` || '';
+                            if (item.restrictions && item.restrictions.trim()) {
+                                formattedDesc += `\n\nRESTRICTIONS: ${item.restrictions}`;
+                            }
                             
                             stratagems.push({
                                 name: item.name || 'Unknown Stratagem',
@@ -3014,7 +3068,8 @@
                 
                 const includeCore = confirm('Include core stratagems (10 universal stratagems)?');
                 if (includeCore) {
-                    stratagems.push(...getCoreStratagems().map(s => ({...s, source: 'Core'})));
+                    const coreStratagems = await getCoreStratagems();
+                    stratagems.push(...coreStratagems);
                 }
                 
                 if (stratagems.length === 0) {
