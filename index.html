@@ -1232,17 +1232,28 @@
                 <h1 class="app-title">WAR 40k</h1>
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
-                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add New List" style="font-size: 1rem;">
-                        ✛
+                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add List from Device (.json)" style="font-size: 0.9rem;">
+                        <img src="/assets/add.svg" width="16" height="16" alt="+">
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Update App" style="font-size: 0.9rem; padding-bottom: 5px;">
-                        ⟳
+                    <button class="btn btn-icon btn-secondary" id="clipboard-import-btn" title="Add List from Clipboard (.json)" style="font-size: 0.9rem;">
+                        <img src="/assets/add_clipboard.svg" width="16" height="16" alt="+C">
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install App"  style="font-weight: 300; font-size: 1.2rem;">
-                        ⤓
+                    <button class="btn btn-icon btn-secondary" id="update-btn" title="Check for Updates" style="font-size: 0.9rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                    </button>
+                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install to Homescreen"  style="font-weight: 300; font-size: 1.2rem;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
                     </button>
                     <button class="btn btn-icon btn-secondary" id="dark-mode-btn" title="Toggle Dark Mode">
-                        ☀️
+                        🌗
                     </button>
                 </div>
             </div>
@@ -1252,7 +1263,7 @@
         <div class="install-prompt hidden" id="install-prompt">
             <div>
                 <strong>&#128241; Install App</strong>
-                <strong>📱 Install App</strong>
+                <strong>Install App</strong>
                 <p>Add to home screen for quick access!</p>
             </div>
             <div>
@@ -1385,7 +1396,7 @@
                     </label>
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    🔍 Fetch Stratagems
+                    Fetch Stratagems
                 </button>
                 <div id="stratagem-status" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
             </form>
@@ -1549,9 +1560,96 @@
             // Dark mode toggle
             document.getElementById('dark-mode-btn').addEventListener('click', toggleDarkMode);
 
-            // Add list button
+            // Add list button (file explorer only)
             document.getElementById('add-list-btn').addEventListener('click', () => {
                 document.getElementById('file-input').click();
+            });
+
+            // Clipboard import button
+            document.getElementById('clipboard-import-btn').addEventListener('click', async () => {
+                try {
+                    // Try to read from clipboard (check for files first)
+                    if (navigator.clipboard && navigator.clipboard.read) {
+                        try {
+                            const clipboardItems = await navigator.clipboard.read();
+                            
+                            // Look for JSON files in clipboard
+                            for (const item of clipboardItems) {
+                                for (const type of item.types) {
+                                    if (type === 'application/json' || type.endsWith('.json')) {
+                                        const blob = await item.getType(type);
+                                        const text = await blob.text();
+                                        const jsonData = JSON.parse(text);
+                                        
+                                        // Basic validation to check if it looks like an army list
+                                        if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
+                                            await processFileData(jsonData);
+                                            return;
+                                        } else {
+                                            alert('No valid army list data found in clipboard file. Please copy a valid JSON army list file.');
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            // If no JSON files found, check for text content as fallback
+                            if (navigator.clipboard && navigator.clipboard.readText) {
+                                const clipboardText = await navigator.clipboard.readText();
+                                
+                                // Check if clipboard contains valid JSON
+                                try {
+                                    const jsonData = JSON.parse(clipboardText);
+                                    
+                                    // Basic validation to check if it looks like an army list
+                                    if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
+                                        // Import from clipboard directly
+                                        await processFileData(jsonData);
+                                        return;
+                                    } else {
+                                        alert('No valid army list data found in clipboard. Please copy a valid JSON army list file or text.');
+                                    }
+                                } catch (jsonError) {
+                                    console.error('Clipboard text error:', jsonError);
+                                    alert('No JSON file found in clipboard and clipboard text is not valid JSON. Please copy a valid JSON army list file.');
+                                }
+                            } else {
+                                alert('No JSON file found in clipboard. Please copy a valid JSON army list file to clipboard.');
+                            }
+                            
+                        } catch (clipboardError) {
+                            console.error('Clipboard read error:', clipboardError);
+                            
+                            // Fallback to text reading if file reading fails
+                            if (navigator.clipboard && navigator.clipboard.readText) {
+                                const clipboardText = await navigator.clipboard.readText();
+                                
+                                try {
+                                    const jsonData = JSON.parse(clipboardText);
+                                    
+                                    if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
+                                        await processFileData(jsonData);
+                                        return;
+                                    } else {
+                                        alert('No valid army list data found in clipboard. Please copy a valid JSON army list file or text.');
+                                    }
+                                } catch (jsonError) {
+                                    console.error('Clipboard text fallback error:', jsonError);
+                                    alert('No JSON file found in clipboard and clipboard text is not valid JSON. Please copy a valid JSON army list file.');
+                                }
+                            } else {
+                                alert('Clipboard access not available in this browser.');
+                            }
+                        }
+                    } else {
+                        alert('Clipboard access not available in this browser.');
+                    }
+                } catch (clipboardError) {
+                    console.error('Clipboard error:', clipboardError);
+                    alert('Error accessing clipboard. Opening file explorer instead.');
+                    // Fallback to file explorer
+                    document.getElementById('file-input').click();
+                }
             });
 
             // File input
@@ -1597,10 +1695,10 @@
             }
         }
 
-        // File upload and processing
-        async function handleFileUpload(file) {
+        // Process file data (for both file upload and clipboard import)
+        async function processFileData(data) {
             try {
-                console.log('Starting file upload for:', file.name);
+                console.log('Processing file data...');
                 
                 // Save current list if one exists
                 if (AppState.currentList && AppState.currentListId) {
@@ -1608,9 +1706,6 @@
                     saveCurrentList();
                 }
                 
-                const text = await file.text();
-                console.log('File text length:', text.length);
-                const data = JSON.parse(text);
                 console.log('Parsed JSON data:', data);
                 const parsedList = parseNewRecruitJSON(data);
                 console.log('Parsed list:', parsedList);
@@ -1628,9 +1723,27 @@
                     
                     console.log('Successfully loaded', parsedList.abilities.length, 'abilities');
                 } else {
-                    alert('No abilities found in the uploaded file. Please check the file format.');
+                    alert('No abilities found in the data. Please check the data format.');
                     console.error('No abilities found in parsed list:', parsedList);
                 }
+            } catch (error) {
+                alert('Error processing data: ' + error.message);
+                console.error('Data processing error:', error);
+            }
+        }
+
+        // File upload and processing
+        async function handleFileUpload(file) {
+            try {
+                console.log('Starting file upload for:', file.name);
+                
+                const text = await file.text();
+                console.log('File text length:', text.length);
+                const data = JSON.parse(text);
+                
+                // Use the shared processFileData function
+                await processFileData(data);
+                
             } catch (error) {
                 alert('Error parsing file: ' + error.message);
                 console.error('File upload error:', error);
@@ -1917,14 +2030,16 @@
                         <button class="action-btn" onclick="renameCurrentList()" title="Rename List">RENAME</button>
                         <button class="action-btn" onclick="saveCurrentList()" title="Save List">SAVE</button>
                         <button class="action-btn" onclick="showAddAbilityModal()" title="Add Custom Entry">CUSTOM</button>
+                        <button class="action-btn" onclick="fetchAndAddCoreStratagems()" title="Fetch core stratagems">CORE</button>
+                        <button class="action-btn" onclick="fetchAndAddFactionStratagems()" title="Fetch faction stratagems">DETACHM.</button>
                     </div>
                     <div class="action-bar-row">
-                        <a href="#phase-deployment" class="action-btn" title="Deployment / Reserves">DEP</a>
-                        <a href="#phase-command" class="action-btn" title="Command Phase">CMD</a>
-                        <a href="#phase-movement" class="action-btn" title="Movement Phase">MOV</a>
-                        <a href="#phase-shooting" class="action-btn" title="Shooting Phase">SHT</a>
-                        <a href="#phase-charge" class="action-btn" title="Charge Phase">CHG</a>
-                        <a href="#phase-fight" class="action-btn" title="Fight Phase">FIG</a>
+                        <a href="#phase-deployment" class="action-btn" title="Deployment / Reserves">DEPLOY</a>
+                        <a href="#phase-command" class="action-btn" title="Command Phase">COMMAND</a>
+                        <a href="#phase-movement" class="action-btn" title="Movement Phase">MOVE</a>
+                        <a href="#phase-shooting" class="action-btn" title="Shooting Phase">SHOOT</a>
+                        <a href="#phase-charge" class="action-btn" title="Charge Phase">CHARGE</a>
+                        <a href="#phase-fight" class="action-btn" title="Fight Phase">FIGHT</a>
                         <a href="#phase-any" class="action-btn" title="Any Phase">ANY</a>
                     </div>
                 </div>
@@ -1945,7 +2060,6 @@
                         <button class="filter-btn" data-filter="detachment">Detachment</button>
                         <button class="filter-btn" data-filter="stratagem">Stratagems</button>
                         <button class="filter-btn" data-filter="enemy">Reactions</button>
-                        <button class="filter-btn" onclick="fetchAndAddStratagems()" title="Fetch stratagems from database">📥 Fetch</button>
                     </div>
                 </div>
 
@@ -2944,7 +3058,49 @@
             }
         }
 
-        async function fetchAndAddStratagems() {
+        async function fetchAndAddCoreStratagems() {
+            if (!AppState.currentList) {
+                alert('Please load an army list first');
+                return;
+            }
+            
+            try {
+                const coreStratagems = await getCoreStratagems();
+                
+                if (coreStratagems.length === 0) {
+                    throw new Error('No core stratagems found');
+                }
+                
+                let addedCount = 0;
+                coreStratagems.forEach(strat => {
+                    const ability = {
+                        id: generateId(),
+                        unitName: `STRATAGEM (${strat.source})`,
+                        abilityName: `${strat.name} [${strat.cp}]`,
+                        description: `WHEN: ${strat.when}\n\n${strat.description}`,
+                        isDetachment: false,
+                        isStratagem: true,
+                        isEnemy: checkIfEnemy(strat.description),
+                        source: 'stratagem'
+                    };
+                    
+                    AppState.currentList.abilities.push(ability);
+                    addedCount++;
+                });
+                
+                AppState.currentList.categorized = categorizeAbilities(AppState.currentList.abilities);
+                renderArmyView();
+                saveCurrentList();
+                
+                alert(`Successfully added ${addedCount} core stratagems!`);
+                
+            } catch (error) {
+                console.error('Error fetching core stratagems:', error);
+                alert(`Error fetching core stratagems: ${error.message}`);
+            }
+        }
+
+        async function fetchAndAddFactionStratagems() {
             if (!AppState.currentList) {
                 alert('Please load an army list first');
                 return;
@@ -3066,12 +3222,6 @@
                     }
                 }
                 
-                const includeCore = confirm('Include core stratagems (10 universal stratagems)?');
-                if (includeCore) {
-                    const coreStratagems = await getCoreStratagems();
-                    stratagems.push(...coreStratagems);
-                }
-                
                 if (stratagems.length === 0) {
                     throw new Error('No stratagems found');
                 }
@@ -3097,11 +3247,11 @@
                 renderArmyView();
                 saveCurrentList();
                 
-                alert(`Successfully added ${addedCount} stratagems!`);
+                alert(`Successfully added ${addedCount} faction stratagems!`);
                 
             } catch (error) {
-                console.error('Error fetching stratagems:', error);
-                alert(`Error fetching stratagems: ${error.message}`);
+                console.error('Error fetching faction stratagems:', error);
+                alert(`Error fetching faction stratagems: ${error.message}`);
             }
         }
 
