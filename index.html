@@ -1021,7 +1021,16 @@
                 font-size: 12px;
             }
             
-            /* Ensure abilities are visible on mobile */
+            #install-btn {
+                font-size: 0.7rem !important;
+            }
+            
+            #install-btn svg {
+                width: 0.9em;
+                height: 0.9em;
+            }
+
+            /* Ensure abilities visibility */
             .phase-section {
                 padding: 8px;
                 margin-bottom: 10px;
@@ -1076,7 +1085,7 @@
                 margin: 5px 0;
             }
             
-            /* List card mobile fixes */
+            /* List card mobile */
             .list-card {
                 flex-direction: column;
                 align-items: flex-start;
@@ -1259,13 +1268,13 @@
                 <h1 class="app-title">WAR 40k</h1>
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
-                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add List from Device (.json)" style="font-size: 0.9rem;">
+                    <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add List from Device (.json)" style="font-size: 1.1rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                         </svg>
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="clipboard-import-btn" title="Add List from Clipboard (.json)" style="font-size: 0.9rem; display: none;">
+                    <button class="btn btn-icon btn-secondary" id="clipboard-import-btn" title="Add List from Clipboard (.json)" style="font-size: 1.1rem; display: none;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                             <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -1281,13 +1290,13 @@
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                         </svg>
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="install-btn" title="Install to Homescreen"  style="font-weight: 300; font-size: 1.2rem;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7,10 12,15 17,10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                    </button>
+                <button class="btn btn-icon btn-secondary" id="install-btn" title="Install to Homescreen" style="font-size: 0.9rem;">
+                    <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 17v3a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3"></path>
+                        <polyline points="8 12 12 16 16 12"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="16"></line>
+                    </svg>
+                </button>
                     <a href="https://ko-fi.com/antaresx101" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="Support on Ko-fi" style="font-size: 0.9rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
