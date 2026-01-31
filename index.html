@@ -1571,66 +1571,71 @@
         function setupInstallPrompt() {
             // Check if app is already installed (running as PWA)
             const isInstalled = window.matchMedia('(display-mode: standalone)').matches || 
-                               window.matchMedia('(display-mode: minimal-ui)').matches ||
-                               document.referrer.includes('android-app://');
+                            window.matchMedia('(display-mode: minimal-ui)').matches ||
+                            document.referrer.includes('android-app://');
             
             console.log('Is app installed?', isInstalled);
             console.log('Service Worker support:', 'serviceWorker' in navigator);
-            console.log('Install prompt support:', 'beforeinstallprompt' in window);
             
-            // Hide install button by default initially
             const installBtn = document.getElementById('install-btn');
-            if (installBtn) {
-                installBtn.style.display = 'block';
-                console.log('Install button hidden');
+            if (!installBtn) {
+                console.error('Install button not found in DOM');
+                return;
             }
             
-            // Show install button if not installed and browser supports PWA
-            if (!isInstalled && 'serviceWorker' in navigator && 'beforeinstallprompt' in window) {
-                console.log('Browser supports PWA install, showing install button');
-                if (installBtn) {
-                    installBtn.style.display = 'block';
-                }
-            } else {
-                console.log('PWA install not available:', {
-                    isInstalled,
-                    hasServiceWorker: 'serviceWorker' in navigator,
-                    hasInstallPrompt: 'beforeinstallprompt' in window
-                });
+            // Always hide install button initially - only show when event fires
+            installBtn.style.display = 'none';
+            console.log('Install button hidden by default');
+            
+            // If already installed, don't bother with install prompt
+            if (isInstalled) {
+                console.log('App is already installed');
+                return;
             }
             
-            // Listen for install prompt
+            // Listen for install prompt - this is the ONLY way to know install is available
             window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('beforeinstallprompt event fired');
+                console.log('beforeinstallprompt event fired - install is available!');
                 e.preventDefault();
                 AppState.deferredPrompt = e;
                 
-                // Show install button in header
-                if (installBtn) {
-                    installBtn.style.display = 'block';
-                    console.log('Install button shown due to beforeinstallprompt event');
-                }
+                // Show install button NOW that we know install is available
+                installBtn.style.display = 'block';
             });
 
             // Handle install button click
-            if (installBtn) {
-                installBtn.addEventListener('click', async () => {
-                    console.log('Install button clicked, deferredPrompt:', AppState.deferredPrompt);
-                    if (AppState.deferredPrompt) {
-                        AppState.deferredPrompt.prompt();
-                        const { outcome } = await AppState.deferredPrompt.userChoice;
-                        console.log('Install outcome:', outcome);
-                        if (outcome === 'accepted') {
-                            console.log('App was installed');
-                            installBtn.style.display = 'none';
-                        }
-                        AppState.deferredPrompt = null;
+            installBtn.addEventListener('click', async () => {
+                console.log('Install button clicked');
+                if (!AppState.deferredPrompt) {
+                    console.log('No install prompt available');
+                    alert('App installation is not available in this browser. Try using Chrome, Edge, or Safari.');
+                    return;
+                }
+                
+                try {
+                    AppState.deferredPrompt.prompt();
+                    const { outcome } = await AppState.deferredPrompt.userChoice;
+                    console.log('Install outcome:', outcome);
+                    
+                    if (outcome === 'accepted') {
+                        console.log('User accepted installation');
+                        installBtn.style.display = 'none';
                     } else {
-                        console.log('No install prompt available');
-                        alert('App installation is not available in this browser. Try using Chrome, Edge, or Firefox on desktop/mobile.');
+                        console.log('User dismissed installation');
                     }
-                });
-            }
+                } catch (error) {
+                    console.error('Error showing install prompt:', error);
+                }
+                
+                AppState.deferredPrompt = null;
+            });
+            
+            // Listen for successful install
+            window.addEventListener('appinstalled', () => {
+                console.log('PWA was installed successfully');
+                installBtn.style.display = 'none';
+                AppState.deferredPrompt = null;
+            });
         }
 
         // Set up all event listeners
