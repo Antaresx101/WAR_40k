@@ -1233,10 +1233,10 @@
                 <div class="header-actions">
                     <span class="app-version" id="app-version" style="font-size: 0.8rem; color: var(--text-light-secondary); margin-right: 10px;"></span>
                     <button class="btn btn-icon btn-secondary" id="add-list-btn" title="Add List from Device (.json)" style="font-size: 0.9rem;">
-                        <img src="/assets/add.svg" width="16" height="16" alt="+">
+                        <img src="./assets/add.svg" width="16" height="16" alt="+">
                     </button>
                     <button class="btn btn-icon btn-secondary" id="clipboard-import-btn" title="Add List from Clipboard (.json)" style="font-size: 0.9rem;">
-                        <img src="/assets/add_clipboard.svg" width="16" height="16" alt="+C">
+                        <img src="./assets/add_clipboard.svg" width="16" height="16" alt="+C">
                     </button>
                     <button class="btn btn-icon btn-secondary" id="update-btn" title="Check for Updates" style="font-size: 0.9rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1596,6 +1596,14 @@
                             // If no JSON files found, check for text content as fallback
                             if (navigator.clipboard && navigator.clipboard.readText) {
                                 const clipboardText = await navigator.clipboard.readText();
+                                console.log('Clipboard text length:', clipboardText.length);
+                                
+                                // Check if clipboard has content before parsing
+                                if (!clipboardText || clipboardText.trim() === '') {
+                                    console.log('Clipboard is empty');
+                                    alert('Clipboard is empty. Please copy a valid JSON army list file or text.');
+                                    return;
+                                }
                                 
                                 // Check if clipboard contains valid JSON
                                 try {
@@ -1607,11 +1615,13 @@
                                         await processFileData(jsonData);
                                         return;
                                     } else {
+                                        console.log('Invalid army list data structure:', jsonData);
                                         alert('No valid army list data found in clipboard. Please copy a valid JSON army list file or text.');
                                     }
                                 } catch (jsonError) {
                                     console.error('Clipboard text error:', jsonError);
-                                    alert('No JSON file found in clipboard and clipboard text is not valid JSON. Please copy a valid JSON army list file.');
+                                    console.error('Clipboard content preview:', clipboardText.substring(0, 200));
+                                    alert('Invalid JSON in clipboard. Please copy a valid JSON army list.');
                                 }
                             } else {
                                 alert('No JSON file found in clipboard. Please copy a valid JSON army list file to clipboard.');
