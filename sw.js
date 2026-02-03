@@ -1,5 +1,5 @@
 const CACHE_NAME = 'WAR_40k';
-const CACHE_VERSION = 'v2.0.0'; // Changelog
+const CACHE_VERSION = 'v2.0.1'; // Changelog
 const urlsToCache = [
   './index.html',
   './manifest.json'

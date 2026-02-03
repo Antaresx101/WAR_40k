@@ -1470,7 +1470,7 @@
             isDarkMode: false,
             deferredPrompt: null,
             draggedElement: null,
-            appVersion: '2.0.0' // Changelog
+            appVersion: '2.0.1' // Changelog
         };
 
         // Initialize the app when page loads
@@ -1656,7 +1656,7 @@
                 console.log('PWA was installed successfully');
                 installBtn.style.display = 'none';
                 AppState.deferredPrompt = null;
-            });
+            });m 
         }
 
         // Set up all event listeners
@@ -3096,6 +3096,7 @@
         const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/game-datacards/datasources/main/10th/gdc/';
         const FACTION_FILES = {
             'grey knights': 'greyknights.json',
+            'adeptus astartes': 'space_marines.json',
             'space marines': 'space_marines.json',
             'necrons': 'necrons.json',
             'tyranids': 'tyranids.json',
