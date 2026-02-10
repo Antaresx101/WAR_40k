@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Warhammer Ability Reference - 40k : Organize and manage your army abilities">
+    <meta name="description" content="Organize and manage your army abilities">
     
     <meta name="theme-color" content="#667eea">
     <meta name="mobile-web-app-capable" content="yes">
@@ -21,6 +21,9 @@
     <link rel="icon" type="image/png" sizes="192x192" href="./assets/icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./assets/icon-512.png">
     <link rel="apple-touch-icon" href="./assets/icon-192.png">
+    
+    <!-- Pako library for GZIP decompression -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
     
     <style>
         /* ==================== BASE STYLES ==================== */
@@ -833,13 +836,17 @@
             border-radius: 8px;
             font-family: inherit;
             resize: vertical;
+            color: #ff8c42;
         }
         
         body.dark-mode .notes-textarea,
         body.dark-mode .exclusion-textarea {
             background: var(--bg-dark);
-            color: var(--text-dark);
             border-color: var(--border-dark);
+        }
+        
+        body.dark-mode .exclusion-textarea {
+            color: #ff8c42;
         }
         
         /* ==================== STICKY ACTION BAR ==================== */
@@ -976,8 +983,15 @@
             body:not(.dark-mode) .notes-textarea,
             body:not(.dark-mode) .exclusion-textarea {
                 background: var(--bg-light) !important;
-                color: var(--text-light) !important;
                 border-color: var(--border-light) !important;
+            }
+            
+            body:not(.dark-mode) .notes-textarea {
+                color: var(--text-light) !important;
+            }
+            
+            body:not(.dark-mode) .exclusion-textarea {
+                color: #ff8c42 !important;
             }
         }
 
@@ -1274,15 +1288,6 @@
                             <line x1="4" y1="12" x2="20" y2="12"></line>
                         </svg>
                     </button>
-                    <button class="btn btn-icon btn-secondary" id="clipboard-import-btn" title="Add List from Clipboard (.json)" style="font-size: 1.1rem; display: none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                            <line x1="9" y1="9" x2="15" y2="9"></line>
-                            <line x1="9" y1="13" x2="15" y2="13"></line>
-                            <line x1="9" y1="17" x2="13" y2="17"></line>
-                        </svg>
-                    </button>
                     <button class="btn btn-icon btn-secondary" id="update-btn" title="Check for Updates" style="font-size: 0.9rem;">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M23 4v6h-6"></path>
@@ -1433,35 +1438,6 @@
         </div>
     </div>
 
-    <!-- Stratagem Modal -->
-    <div class="modal" id="stratagem-modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Add Stratagems</h3>
-                <button class="close-modal" onclick="closeModal('stratagem-modal')">✕</button>
-            </div>
-            <form id="stratagem-form">
-                <div class="form-group">
-                    <label>Faction URL</label>
-                    <input type="url" id="stratagem-url" placeholder="" required>
-                    <small style="color: var(--text-light-secondary); margin-top: 5px; display: block;">
-                        To be implemented
-                    </small>
-                </div>
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="include-core-stratagems" style="width: auto; margin-right: 5px;">
-                        Include Core Stratagems
-                    </label>
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">
-                    Fetch Stratagems
-                </button>
-                <div id="stratagem-status" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
-            </form>
-        </div>
-    </div>
-
     <script>
         // App state and global variables
         const AppState = {
@@ -1470,7 +1446,7 @@
             isDarkMode: false,
             deferredPrompt: null,
             draggedElement: null,
-            appVersion: '2.0.1' // Changelog
+            appVersion: '2.1.0' // Changelog
         };
 
         // Initialize the app when page loads
@@ -1484,6 +1460,9 @@
             loadSavedLists();
             registerServiceWorker();
             setupInstallPrompt();
+            
+            // Check for URL parameter and load list if present
+            checkURLParameter();
             
             // Set default sort button state
             const defaultSortBtn = document.querySelector('[data-sort="name"]');
@@ -1500,7 +1479,6 @@
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.register('./sw.js')
                     .then(reg => {
-                        console.log('Service Worker registered');
                         
                         // Check for updates every 60 seconds
                         setInterval(() => {
@@ -1531,7 +1509,7 @@
                             window.location.reload();
                         });
                     })
-                    .catch(err => console.log('Service Worker registration failed:', err));
+                    .catch(err => console.error('Service Worker registration failed:', err));
             }
         }
         
@@ -1541,7 +1519,6 @@
             if (updateBtn) {
                 updateBtn.style.display = 'block';
                 updateBtn.classList.add('update-available');
-                console.log('Update available - button highlighted');
             }
         }
         
@@ -1550,7 +1527,6 @@
             if (updateBtn) {
                 updateBtn.style.display = 'none';
                 updateBtn.classList.remove('update-available');
-                console.log('Update banner hidden');
             }
         }
         
@@ -1559,18 +1535,14 @@
             const updateBtn = document.getElementById('update-btn');
             if (updateBtn) {
                 updateBtn.addEventListener('click', () => {
-                    console.log('Update button clicked');
                     if (newWorker) {
-                        console.log('Activating waiting service worker...');
                         newWorker.postMessage({ type: 'SKIP_WAITING' });
                     } else {
                         // Check for updates manually
-                        console.log('No waiting worker, checking for updates...');
                         if ('serviceWorker' in navigator) {
                             navigator.serviceWorker.getRegistration().then(reg => {
                                 if (reg) {
                                     reg.update().then(() => {
-                                        console.log('Manual update check completed');
                                         // Show user feedback
                                         const originalText = updateBtn.innerHTML;
                                         updateBtn.innerHTML = 'Checking...';
@@ -1596,9 +1568,6 @@
                             window.matchMedia('(display-mode: minimal-ui)').matches ||
                             document.referrer.includes('android-app://');
             
-            console.log('Is app installed?', isInstalled);
-            console.log('Service Worker support:', 'serviceWorker' in navigator);
-            
             const installBtn = document.getElementById('install-btn');
             if (!installBtn) {
                 console.error('Install button not found in DOM');
@@ -1610,13 +1579,11 @@
             
             // If already installed, no install prompt
             if (isInstalled) {
-                console.log('App is already installed');
                 return;
             }
             
             // Listen for install prompt
             window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('beforeinstallprompt event fired - install is available!');
                 e.preventDefault();
                 AppState.deferredPrompt = e;
                 
@@ -1626,9 +1593,7 @@
 
             // Handle install button click
             installBtn.addEventListener('click', async () => {
-                console.log('Install button clicked');
                 if (!AppState.deferredPrompt) {
-                    console.log('No install prompt available');
                     alert('App installation is not available in this browser. Try using Chrome, Edge, or Safari.');
                     return;
                 }
@@ -1636,13 +1601,10 @@
                 try {
                     AppState.deferredPrompt.prompt();
                     const { outcome } = await AppState.deferredPrompt.userChoice;
-                    console.log('Install outcome:', outcome);
                     
                     if (outcome === 'accepted') {
-                        console.log('User accepted installation');
                         installBtn.style.display = 'none';
                     } else {
-                        console.log('User dismissed installation');
                     }
                 } catch (error) {
                     console.error('Error showing install prompt:', error);
@@ -1653,10 +1615,9 @@
             
             // Listen for successful install
             window.addEventListener('appinstalled', () => {
-                console.log('PWA was installed successfully');
                 installBtn.style.display = 'none';
                 AppState.deferredPrompt = null;
-            });m 
+            });
         }
 
         // Set up all event listeners
@@ -1667,103 +1628,6 @@
             // Add list button (file explorer only)
             document.getElementById('add-list-btn').addEventListener('click', () => {
                 document.getElementById('file-input').click();
-            });
-
-            // Clipboard import button - IMPLEMENT (read from clipboard not working)
-            document.getElementById('clipboard-import-btn').addEventListener('click', async () => {
-                try {
-                    // Try to read from clipboard (check for files first)
-                    if (navigator.clipboard && navigator.clipboard.read) {
-                        try {
-                            const clipboardItems = await navigator.clipboard.read();
-                            
-                            // Look for JSON files in clipboard
-                            for (const item of clipboardItems) {
-                                for (const type of item.types) {
-                                    if (type === 'application/json' || type.endsWith('.json')) {
-                                        const blob = await item.getType(type);
-                                        const text = await blob.text();
-                                        const jsonData = JSON.parse(text);
-                                        
-                                        // Basic validation to check if it looks like an army list
-                                        if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
-                                            await processFileData(jsonData);
-                                            return;
-                                        } else {
-                                            alert('No valid army list data found in clipboard file. Please copy a valid JSON army list file.');
-                                            return;
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            // If no JSON files found, check for text content as fallback
-                            if (navigator.clipboard && navigator.clipboard.readText) {
-                                const clipboardText = await navigator.clipboard.readText();
-                                console.log('Clipboard text length:', clipboardText.length);
-                                
-                                // Check if clipboard has content before parsing
-                                if (!clipboardText || clipboardText.trim() === '') {
-                                    console.log('Clipboard is empty');
-                                    alert('Clipboard is empty. Please copy a valid JSON army list file or text.');
-                                    return;
-                                }
-                                
-                                // Check if clipboard contains valid JSON
-                                try {
-                                    const jsonData = JSON.parse(clipboardText);
-                                    
-                                    // Basic validation to check if it looks like an army list
-                                    if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
-                                        // Import from clipboard directly
-                                        await processFileData(jsonData);
-                                        return;
-                                    } else {
-                                        console.log('Invalid army list data structure:', jsonData);
-                                        alert('No valid army list data found in clipboard. Please copy a valid JSON army list file or text.');
-                                    }
-                                } catch (jsonError) {
-                                    console.error('Clipboard text error:', jsonError);
-                                    console.error('Clipboard content preview:', clipboardText.substring(0, 200));
-                                    alert('Invalid JSON in clipboard. Please copy a valid JSON army list.');
-                                }
-                            } else {
-                                alert('No JSON file found in clipboard. Please copy a valid JSON army list file to clipboard.');
-                            }
-                            
-                        } catch (clipboardError) {
-                            console.error('Clipboard read error:', clipboardError);
-                            
-                            // Fallback to text reading if file reading fails
-                            if (navigator.clipboard && navigator.clipboard.readText) {
-                                const clipboardText = await navigator.clipboard.readText();
-                                
-                                try {
-                                    const jsonData = JSON.parse(clipboardText);
-                                    
-                                    if (jsonData && (jsonData.faction || jsonData.abilities || jsonData.name)) {
-                                        await processFileData(jsonData);
-                                        return;
-                                    } else {
-                                        alert('No valid army list data found in clipboard. Please copy a valid JSON army list file or text.');
-                                    }
-                                } catch (jsonError) {
-                                    console.error('Clipboard text fallback error:', jsonError);
-                                    alert('No JSON file found in clipboard and clipboard text is not valid JSON. Please copy a valid JSON army list file.');
-                                }
-                            } else {
-                                alert('Clipboard access not available in this browser.');
-                            }
-                        }
-                    } else {
-                        alert('Clipboard access not available in this browser.');
-                    }
-                } catch (clipboardError) {
-                    console.error('Clipboard error:', clipboardError);
-                    alert('Error accessing clipboard. Opening file explorer instead.');
-                    // Fallback to file explorer
-                    document.getElementById('file-input').click();
-                }
             });
 
             // File input
@@ -1809,21 +1673,16 @@
             }
         }
 
-        // Process file data (for both file upload and clipboard import)
+        // Process file data
         async function processFileData(data) {
             try {
-                console.log('Processing file data...');
                 
                 // Save current list if one exists
                 if (AppState.currentList && AppState.currentListId) {
-                    console.log('Saving current list before loading new one');
                     saveCurrentList();
                 }
                 
-                console.log('Parsed JSON data:', data);
                 const parsedList = parseNewRecruitJSON(data);
-                console.log('Parsed list:', parsedList);
-                console.log('Number of abilities found:', parsedList?.abilities?.length || 0);
                 
                 if (parsedList && parsedList.abilities && parsedList.abilities.length > 0) {
                     AppState.currentList = parsedList;
@@ -1835,7 +1694,6 @@
                     // Save after rendering so DOM elements exist
                     saveCurrentList();
                     
-                    console.log('Successfully loaded', parsedList.abilities.length, 'abilities');
                 } else {
                     alert('No abilities found in the data. Please check the data format.');
                     console.error('No abilities found in parsed list:', parsedList);
@@ -1849,10 +1707,8 @@
         // File upload and processing
         async function handleFileUpload(file) {
             try {
-                console.log('Starting file upload for:', file.name);
                 
                 const text = await file.text();
-                console.log('File text length:', text.length);
                 const data = JSON.parse(text);
                 
                 // Use the shared processFileData function
@@ -1864,12 +1720,90 @@
             }
         }
 
+        // Decode URL parameter from listforge-json format
+        async function decodeURLParameter(encodedString) {
+            try {
+                
+                // Step 1: Base64 decode to get bytes
+                // Handle URL-safe Base64 characters
+                let base64String = encodedString.replace(/-/g, '+').replace(/_/g, '/');
+                
+                // Fix padding if necessary (Base64 strings should be multiple of 4)
+                while (base64String.length % 4 !== 0) {
+                    base64String += '=';
+                }
+                
+                
+                const binaryString = atob(base64String);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                
+                // Step 2: Decompress using pako (GZIP format)
+                const decompressed = pako.inflate(bytes, { to: 'string' });
+                
+                // Step 3: Parse JSON
+                const jsonData = JSON.parse(decompressed);
+                
+                return jsonData;
+            } catch (error) {
+                console.error('Error decoding URL parameter:', error);
+                console.error('Error at stage:', error.message);
+                throw new Error('Failed to decode URL parameter: ' + error.message);
+            }
+        }
+
+        // Check for URL parameter and load list if present
+        async function checkURLParameter() {
+            try {
+                const fullUrl = window.location.href;
+                
+                const urlParams = new URLSearchParams(window.location.search);
+                const hash = window.location.hash;
+                
+                // Check both query string and hash fragment
+                let encodedData = null;
+                
+                if (urlParams.has('data')) {
+                    encodedData = urlParams.get('data');
+                } else if (hash) {
+                    // Handle different hash formats
+                    if (hash.startsWith('#/listforge-json/')) {
+                        // Extract everything after the prefix
+                        encodedData = hash.substring('#/listforge-json/'.length);
+                    } else if (hash.startsWith('#listforge-json/')) {
+                        encodedData = hash.substring('#listforge-json/'.length);
+                    } else if (hash.includes('/')) {
+                        // Fallback: get everything after last slash
+                        const parts = hash.split('/');
+                        encodedData = parts[parts.length - 1];
+                    } else if (hash.length > 1) {
+                        // Just use the hash without the # symbol
+                        encodedData = hash.substring(1);
+                    }
+                }
+                
+                if (encodedData && encodedData.length > 0) {
+                    
+                    const decodedData = await decodeURLParameter(encodedData);
+                    await processFileData(decodedData);
+                    
+                    // Clean up URL after loading
+                    const cleanUrl = window.location.origin + window.location.pathname;
+                    window.history.replaceState({}, document.title, cleanUrl);
+                } else {
+                }
+            } catch (error) {
+                console.error('Error loading from URL:', error);
+                alert('Error loading list from URL: ' + error.message + '\n\nCheck the browser console for more details.');
+            }
+        }
+
         // Parse army list JSON data
         function parseNewRecruitJSON(data) {
-            console.log('Starting JSON parsing...');
             const roster = data.roster || {};
             const forces = roster.forces || [];
-            console.log('Found', forces.length, 'forces in roster');
             
             const list = {
                 id: Date.now().toString(),
@@ -1882,21 +1816,15 @@
                 exclusions: 'Invulnerable Save\nLeader\nUnit Composition'
             };
             
-            console.log('Initial list object:', list);
-
             for (const force of forces) {
-                console.log('Processing force:', force.name || force.catalogueName);
                 list.faction = force.catalogueName || '';
                 list.faction = list.faction.replace('Imperium - ', '').replace('Chaos - ', '');
                 
                 walkSelections(force.selections || [], list);
             }
 
-            console.log('After parsing, found', list.abilities.length, 'abilities');
-            
             // Categorize abilities
             list.categorized = categorizeAbilities(list.abilities);
-            console.log('Categorized abilities:', Object.keys(list.categorized).map(phase => `${phase}: ${list.categorized[phase].length}`));
             
             return list;
         }
@@ -2019,8 +1947,6 @@
 
         // Sort abilities by game phase
         function categorizeAbilities(abilities) {
-            console.log('Categorizing', abilities.length, 'abilities');
-            
             const phases = {
                 'DEPLOYMENT / RESERVES': [],
                 'COMMAND PHASE': [],
@@ -2071,7 +1997,6 @@
                 desc = desc.replace(/^target:\s*/i, '');
                 desc = desc.replace(/^effect:\s*/i, '');
                 
-                console.log(`Processing ability: ${ability.abilityName} - Description: ${desc.substring(0, 100)}...`);
                 let found = false;
 
                 for (const [phase, keywords] of Object.entries(phaseKeywords)) {
@@ -2080,11 +2005,9 @@
                     const hasInclude = keywords.include.some(kw => desc.includes(kw));
                     const hasExclude = keywords.exclude.some(kw => desc.includes(kw));
 
-                    console.log(`  Phase ${phase}: include=${hasInclude}, exclude=${hasExclude}`);
 
                     if (hasInclude && !hasExclude) {
                         phases[phase].push(ability);
-                        console.log(`  -> Assigned to ${phase}`);
                         found = true;
                         break;
                     }
@@ -2092,17 +2015,15 @@
 
                 if (!found) {
                     phases['OTHER'].push(ability);
-                    console.log(`  -> Assigned to OTHER`);
                 }
             }
 
-            console.log('Final categorization:', Object.keys(phases).map(phase => `${phase}: ${phases[phase].length}`));
             return phases;
         }
 
         // Smooth scrolling for navigation
         function setupSmoothScroll() {
-            // Calculate the sticky bar height (approx 48px for action bar + 8px padding)
+            // Sticky bar height (48px for action bar)
             const stickyOffset = 56;
             
             document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -2124,7 +2045,6 @@
 
         // Render the main army view
         function renderArmyView() {
-            console.log('Rendering army view...');
             const armyView = document.getElementById('army-view');
             const welcomeScreen = document.getElementById('welcome-screen');
 
@@ -2132,9 +2052,6 @@
             armyView.style.display = 'block';
 
             const list = AppState.currentList;
-            console.log('Current list:', list);
-            console.log('Number of abilities in list:', list?.abilities?.length || 0);
-            console.log('Categorized phases:', list?.categorized ? Object.keys(list.categorized) : 'none');
 
             armyView.innerHTML = `
                 <div class="action-bar">
@@ -2220,8 +2137,6 @@
         }
 
         function renderPhases(categorized) {
-            console.log('Rendering phases with categorized data:', categorized);
-            console.log('Available phases:', Object.keys(categorized || {}));
             let html = '';
             
             const phaseIds = {
@@ -2235,21 +2150,18 @@
                 'OTHER': 'phase-other'
             };
 
-            // Ensure all phases exist even if empty
+            // All phases exist even if empty
             const allPhases = ['DEPLOYMENT / RESERVES', 'COMMAND PHASE', 'MOVEMENT PHASE', 'SHOOTING PHASE', 'CHARGE PHASE', 'FIGHT PHASE', 'ANY PHASE', 'OTHER'];
             
             for (const phase of allPhases) {
                 const abilities = categorized[phase] || [];
-                console.log(`Phase ${phase} has ${abilities.length} abilities`);
                 
                 if (abilities.length > 0) {
-                    console.log(`  Abilities in ${phase}:`, abilities.map(a => a.abilityName));
                 }
                 
                 const phaseId = phaseIds[phase] || 'phase-other';
                 
                 const abilitiesHTML = abilities.map(ability => renderAbility(ability)).join('');
-                console.log(`Generated abilities HTML for ${phase}:`, abilitiesHTML.substring(0, 200) + '...');
                 
                 html += `
                     <div class="phase-section" data-phase="${phase}" id="${phaseId}">
@@ -2259,12 +2171,10 @@
                 `;
             }
             
-            console.log('Generated HTML length:', html.length);
             return html;
         }
 
         function renderAbility(ability) {
-            console.log('Rendering ability:', ability.abilityName, 'for unit:', ability.unitName);
             
             const classes = ['ability'];
             if (ability.isEnemy) classes.push('enemy');
@@ -2294,7 +2204,6 @@
                 </div>
             `;
             
-            console.log('Generated HTML for ability:', html.substring(0, 200) + '...');
             return html;
         }
         
@@ -2568,7 +2477,7 @@
             openModal('edit-ability-modal');
         }
 
-        function saveEditedAbility() {
+                function saveEditedAbility() {
             const abilityId = document.getElementById('edit-ability-id').value;
             const ability = findAbilityById(abilityId);
             
@@ -2576,7 +2485,7 @@
                 // Store current search and filter state
                 const searchBox = document.getElementById('search-box');
                 const searchValue = searchBox ? searchBox.value : '';
-                const activeFilter = document.querySelector('.filter-btn.active');
+                const activeFilter = document.querySelector('.filter-buttons .filter-btn.active');
                 const filterValue = activeFilter ? activeFilter.dataset.filter : 'all';
                 
                 // Store current scroll position
@@ -2627,16 +2536,23 @@
                     });
                 }
                 
-                // Restore search and filter state
-                if (searchBox) {
-                    searchBox.value = searchValue;
-                    if (searchValue) {
-                        handleSearch({ target: searchBox });
+                // Restore filter state
+                if (activeFilter) {
+                    if (filterValue === 'all') {
+                        activeFilter.classList.add('active');
+                    } else {
+                        handleFilter({ target: activeFilter });
                     }
                 }
                 
-                if (activeFilter && filterValue !== 'all') {
-                    handleFilter({ target: activeFilter });
+                // Restore search state
+                if (searchBox) {
+                    searchBox.value = searchValue;
+                    if (searchValue) {
+                        document.querySelectorAll('.ability').forEach(ability => {
+                            applyCurrentFilters(ability);
+                        });
+                    }
                 }
                 
                 // Restore scroll position
@@ -3010,57 +2926,6 @@
             openModal('add-ability-modal');
         }
         
-        function showStratagemModal() {
-            if (!AppState.currentList) {
-                alert('Please load an army list first');
-                return;
-            }
-            openModal('stratagem-modal');
-        }
-        
-        // Handle stratagem form submission
-        document.addEventListener('DOMContentLoaded', () => {
-            const stratagemForm = document.getElementById('stratagem-form');
-            if (stratagemForm) {
-                stratagemForm.addEventListener('submit', async (e) => {
-                    e.preventDefault();
-                    await fetchStratagems();
-                });
-            }
-        });
-        
-        async function fetchStratagems() {
-            const url = document.getElementById('stratagem-url').value;
-            const includeCore = document.getElementById('include-core-stratagems').checked;
-            const statusDiv = document.getElementById('stratagem-status');
-            
-            statusDiv.innerHTML = '⏳ Fetching stratagems...';
-            statusDiv.style.color = 'var(--info)';
-            
-            try {
-                // Note: Actual fetch would require CORS proxy or backend
-                // This is a placeholder for the structure
-                alert('Note: Feature currently not implemented.');
-                
-                statusDiv.innerHTML = '⚠️ Manual entry required (see alert)';
-                statusDiv.style.color = 'var(--warning)';
-                
-                // Placeholder for actual implementation:
-                /*
-                const detachmentName = AppState.currentList.detachment;
-                const response = await fetch(proxyUrl + url);
-                const html = await response.text();
-                // Parse stratagems from HTML
-                // Add to AppState.currentList.abilities
-                // Re-categorize and render
-                */
-                
-            } catch (error) {
-                statusDiv.innerHTML = '❌ Error fetching stratagems';
-                statusDiv.style.color = 'var(--danger)';
-                console.error(error);
-            }
-        }
 
         // Modal helpers
         function openModal(modalId) {
@@ -3090,7 +2955,7 @@
         }
 
         // ========================================
-        // STRATAGEM FETCHER FUNCTIONALITY
+        // STRATAGEM FETCHER
         // ========================================
         
         const GITHUB_BASE_URL = 'https://raw.githubusercontent.com/game-datacards/datasources/main/10th/gdc/';
